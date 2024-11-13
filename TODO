@@ -1,0 +1,7 @@
+[-] !!! FIX EXTRA BYTES ON REPLY !!!
+[x] create default directories if not already existing (same for DB file)
+[ ] create default tables in DB if not already existing (ADMIN & USERS)
+[ ] auth check on request (admin for admin pages & user for api)
+[ ] Hash + check user password (/!\ seems hardto implements)
+[ ] Make SQL editor + display result
+[ ] Display created tables + rows (NOT ADMIN TABLE !)

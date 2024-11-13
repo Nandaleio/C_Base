@@ -1,0 +1,4 @@
+.vscode/*
+dist/*
+cb_*
+*.exe
