@@ -12,13 +12,12 @@
 #include "libs/sqlite3.h"  // Include SQLite header file
 #include "libs/mongoose.h" // Include Mongoose header file
 
-#define CBASE_PREFIX "cb_"
-
 // SQLite db file location
-#define DATA_PATH CBASE_PREFIX"data"
-#define DB_PATH  DATA_PATH"/data.db"
+#define DB_PATH  "cb_data/data.db"
 
-#define PUBLIC_DIR CBASE_PREFIX"public"
+#define PUBLIC_DIR "cb_public"
+
+#define MG_API_HEADERS "Content-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: *\r\n"
 
 // Initialize Mongoose server options
 char *s_http_port = "http://localhost:8080";
@@ -42,10 +41,12 @@ static struct user *getuser(struct mg_http_message *hm) {
     char user[256], pass[256];
     struct user *u;
     mg_http_creds(hm, user, sizeof(user), pass, sizeof(pass));
-
+    printf("Credentials: %s: %s\r\n", user, pass);
     if (user[0] == '\0') { // token auth
         for (u = users; u->name != NULL; u++)
-        if (strcmp(pass, u->token) == 0) return u;
+        if (strcmp(pass, u->token) == 0) {
+            return u;
+        }
     } else if (user[0] != '\0' && pass[0] != '\0') { // login user & pass
         for (u = users; u->name != NULL; u++)
         if (strcmp(user, u->name) == 0 && strcmp(pass, u->pass) == 0) {
@@ -61,56 +62,49 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
 
     struct mg_http_message *hm = (struct mg_http_message *) ev_data;
 
-    // UNAUTHENTICATED API :
-    if(mg_match(hm->uri, mg_str("/public"), NULL)) {
+    if (mg_strcmp(hm->method, mg_str("OPTIONS")) == 0) {
+            return mg_http_reply(c, 204, MG_API_HEADERS"Access-Control-Allow-Headers: *\r\n\r\n", "{\"res\": \"No Content\"}");
+    } 
 
-        // struct mg_http_serve_opts opts = {
-        //     .root_dir = "/ui/dist",
-        //     .fs = &mg_fs_packed
-        // };
-        // return mg_http_serve_dir(c, ev_data, &opts);
+    if(mg_match(hm->uri, mg_str("/api/#"), NULL)) {
 
-        struct mg_http_serve_opts opts = {
-            .root_dir = PUBLIC_DIR
-        };
-        return mg_http_serve_dir(c, ev_data, &opts);
-    }
-
-    struct user *u = getuser(hm);
-
-    // AUTHENTICATED API :
-    if(u != NULL) {
-
-        // Admin 
-        if(mg_match(hm->uri, mg_str("/api/login"), NULL)) {
-            return mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{\"token\": %m}\n", MG_ESC(u->token));
+        struct user *u = getuser(hm);
+        if(u == NULL) {
+           return mg_http_reply(c, 403, "", "Denied\n");
         }
-
-        // API endpoint
+        
+        if(mg_match(hm->uri, mg_str("*/login"), NULL)) {
+            return mg_http_reply(c, 200, MG_API_HEADERS, "{\"token\": %m}\n", MG_ESC(u->token));
+        }
         else if (mg_match(hm->uri, mg_str("/api/tables"), NULL)) {
             //TODO Handle table operations
-            const char* sql = "SELECT name FROM sqlite_master WHERE type='table';";
+            char *query = mg_json_get_str(hm->body, "$query");
+            printf("/api/table: %s\r\n", hm->body);
+            //const char* sql = "SELECT name FROM sqlite_master WHERE type='table';";
+            mg_http_reply(c, 200, MG_API_HEADERS, "{%m:%m}\n", mg_print_esc, 0, "result", "coucou");
         }
 
-    } // END AUTHENTICATED API -x-
+    } else {
+        struct mg_http_serve_opts opts = {
+            .root_dir = "/ui/dist",
+            .fs = &mg_fs_packed
+        };
+        return mg_http_serve_dir(c, ev_data, &opts);
+    } 
+    // else {
 
-    struct mg_http_serve_opts opts = {
-        .root_dir = "/ui/dist",
-        .fs = &mg_fs_packed
-    };
-    mg_http_serve_dir(c, ev_data, &opts);
-    // struct mg_http_serve_opts opts = {
-    //     .root_dir = PUBLIC_DIR
-    // };
-    // mg_http_serve_dir(c, ev_data, &opts);
-    
+    //     struct mg_http_serve_opts opts = {
+    //         .root_dir = PUBLIC_DIR
+    //     };
+    //     mg_http_serve_dir(c, ev_data, &opts);
+
+    // }
 }
 
+// Initialize Mongoose
 int init_mg(struct mg_mgr *mgr){
     struct mg_connection *nc;
-    // Initialize Mongoose
     mg_mgr_init(mgr);
-    mg_log_set(MG_LL_DEBUG);
     nc = mg_http_listen(mgr, s_http_port, ev_handler, NULL);
     if (nc == NULL) {
         fprintf(stderr, "Failed to create listener\n");
@@ -120,12 +114,50 @@ int init_mg(struct mg_mgr *mgr){
 }
 
 int init_db() {
+    
     if (sqlite3_open(DB_PATH, &db) != SQLITE_OK) {
         fprintf(stderr, "Failed to open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
         return 1;
     }
-    //TODO add init tables if not existing
+
+    sqlite3_stmt* stmt = NULL;
+
+    int retval;
+    create_tables_if_not_existing("admin");
+    //create_tables_if_not_existing("users");
+
     return 0;
+}
+
+int create_tables_if_not_existing(const char *table_name) {
+    sqlite3_stmt* stmt = NULL;
+
+    char *sql = "CREATE TABLE IF NOT EXISTS admin ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "created TEXT DEFAULT (SELECT DATE()),"
+        "email TEXT NOT NULL, "
+        "password TEXT NOT NULL "
+    ")";
+
+    int retval = sqlite3_prepare_v2(db, table_name, -1, &stmt, 0);
+    if(retval != SQLITE_OK) {
+        printf("%s", sqlite3_errstr(retval));
+        return 1;
+    }
+
+    // retval = sqlite3_bind_text(stmt, 1, table_name, sizeof(table_name), NULL);
+    // if (retval != SQLITE_OK) {
+    //     printf("%s", sqlite3_errstr(retval));
+    //     return 1;
+    // }
+
+    retval = sqlite3_step(stmt);
+    if(retval != SQLITE_DONE) {
+        printf("%s", sqlite3_errstr(retval));
+    }
+    retval = sqlite3_finalize(stmt);
+    return retval;
 }
 
 void create_directory_if_not_exists(const char *dir_name) {
@@ -140,7 +172,7 @@ void create_directory_if_not_exists(const char *dir_name) {
 }
 
 void init_dir() {
-    create_directory_if_not_exists("cb_public");
+    //create_directory_if_not_exists("cb_public");
     create_directory_if_not_exists("cb_data");
 }
 

@@ -24,6 +24,8 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#define OUTPUT_FILE "fs.c"
+
 static const char *code =
     "static int scmp(const char *a, const char *b) {\n"
     "  while (*a && (*a == *b)) a++, b++;\n"
@@ -47,14 +49,18 @@ int main(int argc, char *argv[]) {
   int i, j, ch;
   const char *strip_prefix = "";
 
-  printf("%s", "#include <stddef.h>\n");
-  printf("%s", "#include <string.h>\n");
-  printf("%s", "#include <time.h>\n");
-  printf("%s", "\n");
-  printf("%s", "#if defined(__cplusplus)\nextern \"C\" {\n#endif\n");
-  printf("%s", "const char *mg_unlist(size_t no);\n");
-  printf("%s", "const char *mg_unpack(const char *, size_t *, time_t *);\n");
-  printf("%s", "#if defined(__cplusplus)\n}\n#endif\n\n");
+  FILE *fptr;
+
+  fptr = fopen(OUTPUT_FILE, "w");
+
+  fprintf(fptr, "%s", "#include <stddef.h>\n");
+  fprintf(fptr, "%s", "#include <string.h>\n");
+  fprintf(fptr, "%s", "#include <time.h>\n");
+  fprintf(fptr, "%s", "\n");
+  fprintf(fptr, "%s", "#if defined(__cplusplus)\nextern \"C\" {\n#endif\n");
+  fprintf(fptr, "%s", "const char *mg_unlist(size_t no);\n");
+  fprintf(fptr, "%s", "const char *mg_unpack(const char *, size_t *, time_t *);\n");
+  fprintf(fptr, "%s", "#if defined(__cplusplus)\n}\n#endif\n\n");
 
   for (i = 1; i < argc; i++) {
 
@@ -71,28 +77,28 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
       }
 
-      printf("static const unsigned char v%d[] = {\n", i);
+      fprintf(fptr, "static const unsigned char v%d[] = {\n", i);
       for (j = 0; (ch = fgetc(fp)) != EOF; j++) {
         if (j == (int) sizeof(ascii)) {
-          printf("\n");
+          fprintf(fptr, "\n");
           j = 0;
         }
         ascii[j] = (char) ((ch >= ' ' && ch <= '~' && ch != '\\') ? ch : '.');
-        printf(" %3u,", ch);
+        fprintf(fptr, " %3u,", ch);
       }
       // Append zero byte at the end, to make text files appear in memory
       // as nul-terminated strings.
-      printf(" 0 \n};\n");
+      fprintf(fptr, " 0 \n};\n");
       fclose(fp);
     }
   }
 
-  printf("%s", "\nstatic const struct packed_file {\n");
-  printf("%s", "  const char *name;\n");
-  printf("%s", "  const unsigned char *data;\n");
-  printf("%s", "  size_t size;\n");
-  printf("%s", "  time_t mtime;\n");
-  printf("%s", "} packed_files[] = {\n");
+  fprintf(fptr, "%s", "\nstatic const struct packed_file {\n");
+  fprintf(fptr, "%s", "  const char *name;\n");
+  fprintf(fptr, "%s", "  const unsigned char *data;\n");
+  fprintf(fptr, "%s", "  size_t size;\n");
+  fprintf(fptr, "%s", "  time_t mtime;\n");
+  fprintf(fptr, "%s", "} packed_files[] = {\n");
 
   for (i = 1; i < argc; i++) {
     struct stat st;
@@ -104,12 +110,14 @@ int main(int argc, char *argv[]) {
     }
     stat(argv[i], &st);
     if (strncmp(name, strip_prefix, n) == 0) name += n;
-    printf("  {\"/%s\", v%d, sizeof(v%d), %lu},\n", name, i, i,
+    fprintf(fptr, "  {\"/%s\", v%d, sizeof(v%d), %lu},\n", name, i, i,
            (unsigned long) st.st_mtime);
   }
-  printf("%s", "  {NULL, NULL, 0, 0}\n");
-  printf("%s", "};\n\n");
-  printf("%s", code);
+  fprintf(fptr, "%s", "  {NULL, NULL, 0, 0}\n");
+  fprintf(fptr, "%s", "};\n\n");
+  fprintf(fptr, "%s", code);
+
+  fclose(fptr);
 
   return EXIT_SUCCESS;
 }

@@ -8,8 +8,7 @@ export function ProtectedRoute(props) {
     const loc = useLocation();
 
     useEffect(() => {
-        console.log(token)
-        if (false) { //-!token) {
+        if (!token) {
             loc.route('/login', true);
         }
     }, [token]);

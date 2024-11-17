@@ -8,7 +8,8 @@
 	},
 	"dependencies": {
 		"preact": "^10.22.1",
-		"preact-iso": "^2.8.1"
+		"preact-iso": "^2.8.1",
+		"tippy.js": "^6.3.7"
 	},
 	"devDependencies": {
 		"@preact/preset-vite": "^2.9.0",

@@ -2,9 +2,6 @@
 
 export function Tables() {
 
-    const primaryAttribut = {primary: true}
-    const secondaryAttribut = {secondary: true}
-
     return (
         <>
         <h3 class="demo-header">table</h3>
@@ -40,80 +37,10 @@ export function Tables() {
       </tbody>
     </table>
 
-    <table {...primaryAttribut}>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Home Runs</th>
-            <th>AVG</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Mike Trout</td>
-            <td>45</td>
-            <td>.291</td>
-          </tr>
-          <tr>
-            <td>Christian Yelich</td>
-            <td>44</td>
-            <td>.329</td>
-          </tr>
-          <tr>
-            <td>Mookie Betts</td>
-            <td>29</td>
-            <td>.295</td>
-          </tr>
-          <tr>
-            <td>Cody Bellinger</td>
-            <td>47</td>
-            <td>.305</td>
-          </tr>
-        </tbody>
-      </table>
-  
-      <table {...secondaryAttribut}>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Home Runs</th>
-            <th>AVG</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Mike Trout</td>
-            <td>45</td>
-            <td>.291</td>
-          </tr>
-          <tr>
-            <td>Christian Yelich</td>
-            <td>44</td>
-            <td>.329</td>
-          </tr>
-          <tr>
-            <td>Mookie Betts</td>
-            <td>29</td>
-            <td>.295</td>
-          </tr>
-          <tr>
-            <td>Cody Bellinger</td>
-            <td>47</td>
-            <td>.305</td>
-          </tr>
-        </tbody>
-      </table>
-  
 
     <h3 class="demo-header">button</h3>
     <button type="button">Save</button>
     <button type="button" disabled>Disabled</button>
-    <br/>
-    <button type="button" {...primaryAttribut}>Save</button>
-    <button type="button" {...primaryAttribut} disabled>Disabled</button>
-    <br/>
-    <button type="button" {...secondaryAttribut}>Save</button>
-    <button type="button" {...secondaryAttribut} disabled>Disabled</button>
 
     <h3 class="demo-header">datalist</h3>
     <label for="ice-cream-choice">Choose a flavor</label>
