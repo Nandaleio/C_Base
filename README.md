@@ -1,11 +1,11 @@
 # C_Base
 
-A Pocketbase altarnative writen in C 
+A Pocketbase alternative writen in C and using [Mongoose web server](https://mongoose.ws/) and [SQLite](https://www.sqlite.org/)
 
-## Roadmap: 
+## TODO : 
 
 - [x] Create default directories if not already existing (same for DB file)
-- [ ] Auth check on request (admin for admin pages & user for api)
+- [ ] Auth check on request (admin & user for api)
 - [ ] Serve public folder beside admin UI (need to ask mongoose dev)
 - [ ] Create default tables in DB if not already existing (ADMIN & USERS & LOGS)
 - [ ] Hash + check user password ( /!\ seems hard to implements /!\ )

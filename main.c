@@ -9,52 +9,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>   // Required for alloca and rand
-#include "libs/sqlite3.h"  // Include SQLite header file
+#include "db.h"
 #include "libs/mongoose.h" // Include Mongoose header file
 
-// SQLite db file location
-#define DB_PATH  "cb_data/data.db"
-
-#define PUBLIC_DIR "cb_public"
+//#define PUBLIC_DIR "cb_public"
 
 #define MG_API_HEADERS "Content-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: *\r\n"
 
 // Initialize Mongoose server options
 char *s_http_port = "http://localhost:8080";
 
-sqlite3 *db;
-
-struct user {
-  const char *name, *pass, *token;
-};
-
-// Parse HTTP requests, return authenticated user or NULL
-static struct user *getuser(struct mg_http_message *hm) {
-    //TODO use SQLite DB
-    static struct user users[] = {
-        {"admin", "admin", "admin_token"},
-        {"user1", "pass1", "user1_token"},
-        {"user2", "pass2", "user2_token"},
-        {NULL, NULL, NULL},
-    };
-
-    char user[256], pass[256];
-    struct user *u;
-    mg_http_creds(hm, user, sizeof(user), pass, sizeof(pass));
-    printf("Credentials: %s: %s\r\n", user, pass);
-    if (user[0] == '\0') { // token auth
-        for (u = users; u->name != NULL; u++)
-        if (strcmp(pass, u->token) == 0) {
-            return u;
-        }
-    } else if (user[0] != '\0' && pass[0] != '\0') { // login user & pass
-        for (u = users; u->name != NULL; u++)
-        if (strcmp(user, u->name) == 0 && strcmp(pass, u->pass) == 0) {
-            return u;
-        }
-    }
-    return NULL;
-}
 
 // HTTP event handler
 static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
@@ -90,15 +54,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
             .fs = &mg_fs_packed
         };
         return mg_http_serve_dir(c, ev_data, &opts);
-    } 
-    // else {
-
-    //     struct mg_http_serve_opts opts = {
-    //         .root_dir = PUBLIC_DIR
-    //     };
-    //     mg_http_serve_dir(c, ev_data, &opts);
-
-    // }
+    }
 }
 
 // Initialize Mongoose
@@ -113,73 +69,30 @@ int init_mg(struct mg_mgr *mgr){
     return 0;
 }
 
-int init_db() {
-    
-    if (sqlite3_open(DB_PATH, &db) != SQLITE_OK) {
-        fprintf(stderr, "Failed to open database: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return 1;
-    }
-
-    sqlite3_stmt* stmt = NULL;
-
-    int retval;
-    create_tables_if_not_existing("admin");
-    //create_tables_if_not_existing("users");
-
-    return 0;
-}
-
-int create_tables_if_not_existing(const char *table_name) {
-    sqlite3_stmt* stmt = NULL;
-
-    char *sql = "CREATE TABLE IF NOT EXISTS admin ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created TEXT DEFAULT (SELECT DATE()),"
-        "email TEXT NOT NULL, "
-        "password TEXT NOT NULL "
-    ")";
-
-    int retval = sqlite3_prepare_v2(db, table_name, -1, &stmt, 0);
-    if(retval != SQLITE_OK) {
-        printf("%s", sqlite3_errstr(retval));
-        return 1;
-    }
-
-    // retval = sqlite3_bind_text(stmt, 1, table_name, sizeof(table_name), NULL);
-    // if (retval != SQLITE_OK) {
-    //     printf("%s", sqlite3_errstr(retval));
-    //     return 1;
-    // }
-
-    retval = sqlite3_step(stmt);
-    if(retval != SQLITE_DONE) {
-        printf("%s", sqlite3_errstr(retval));
-    }
-    retval = sqlite3_finalize(stmt);
-    return retval;
-}
-
-void create_directory_if_not_exists(const char *dir_name) {
+int create_directory_if_not_exists(const char *dir_name) {
     struct stat st = {0};
     if (stat(dir_name, &st) == -1) {
         if (mkdir(dir_name, 0755) == 0) {
             fprintf(stdout, "Directory '%s' created successfully.\n", dir_name);
         } else {
             fprintf(stderr, "mkdir error while creating directory: %s\n", dir_name);
+            return 1;
         }
     }
+    return 0;
 }
 
-void init_dir() {
-    //create_directory_if_not_exists("cb_public");
-    create_directory_if_not_exists("cb_data");
+int init_dir() {
+    int ret = 0;
+    // ret += create_directory_if_not_exists("cb_public");
+    ret += create_directory_if_not_exists("cb_data");
+    return ret;
 }
 
 int main(void) {
     struct mg_mgr mgr;
 
-    init_dir();
+    if(init_dir() != 0) return 1;
     if(init_db() != 0) return 1;
     if(init_mg(&mgr) != 0) return 1;
 
@@ -193,6 +106,6 @@ int main(void) {
 
     // Cleanup
     mg_mgr_free(&mgr);
-    sqlite3_close(db);
+    close_db();
     return 0;
 }
