@@ -1,0 +1,19 @@
+@import './bolt.min.css';
+
+
+body,#app{
+    height: 100vh;
+    width: 100vw;
+}
+
+body {
+    --primary-color: #f95959;
+    --secondary-color:#455d7a; 
+    --container-color: #e3e3e3; 
+    --container-secondary-color:#233142; 
+
+}
+
+.primary {
+    background-color: var(--primary-color);
+}

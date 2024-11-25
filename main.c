@@ -9,7 +9,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>   // Required for alloca and rand
-#include "db.h"
+#include "modules/db.h"
+#include "modules/utils.h"
 #include "libs/mongoose.h" // Include Mongoose header file
 
 //#define PUBLIC_DIR "cb_public"
@@ -18,7 +19,6 @@
 
 // Initialize Mongoose server options
 char *s_http_port = "http://localhost:8080";
-
 
 // HTTP event handler
 static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
@@ -32,28 +32,51 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
 
     if(mg_match(hm->uri, mg_str("/api/#"), NULL)) {
 
-        struct user *u = getuser(hm);
+        struct user *u = db_get_user(hm);
         if(u == NULL) {
            return mg_http_reply(c, 403, "", "Denied\n");
         }
-        
+
         if(mg_match(hm->uri, mg_str("*/login"), NULL)) {
-            return mg_http_reply(c, 200, MG_API_HEADERS, "{\"token\": %m}\n", MG_ESC(u->token));
-        }
-        else if (mg_match(hm->uri, mg_str("/api/tables"), NULL)) {
-            //TODO Handle table operations
-            char *query = mg_json_get_str(hm->body, "$query");
-            printf("/api/table: %s\r\n", hm->body);
-            //const char* sql = "SELECT name FROM sqlite_master WHERE type='table';";
-            mg_http_reply(c, 200, MG_API_HEADERS, "{%m:%m}\n", mg_print_esc, 0, "result", "coucou");
+            return mg_http_reply(c, 200, MG_API_HEADERS, "{\"token\": \"%s\"}\n", u->token);
         }
 
+        
+        if(mg_match(hm->uri, mg_str("*/query"), NULL)) {
+            char *query = mg_json_get_str(hm->body, "$.query");
+            printf("received query : %s \r\n", query);
+            char *json = db_query(query);
+            mg_http_reply(c, 200, MG_API_HEADERS, json);
+            free(json);
+            return;
+        }
+        
+        if (mg_match(hm->uri, mg_str("*/tables"), NULL)) {
+            char *query = "SELECT name FROM sqlite_master WHERE type='table' and name not like 'sqlite_%' and name != 'admin'";
+            char *json = db_query(query);
+            mg_http_reply(c, 200, MG_API_HEADERS, json);
+            free(json);
+            return;
+        }
+
+        return mg_http_reply(c, 204, MG_API_HEADERS"Access-Control-Allow-Headers: *\r\n\r\n", "{\"res\": \"No Content\"}");
+
     } else {
-        struct mg_http_serve_opts opts = {
-            .root_dir = "/ui/dist",
-            .fs = &mg_fs_packed
-        };
-        return mg_http_serve_dir(c, ev_data, &opts);
+
+        struct mg_http_serve_opts opts;
+        memset(&opts, 0, sizeof(opts));
+
+        if(mg_match(hm->uri, mg_str("/_/#"), NULL)) {
+            hm->uri.buf += 2;
+            hm->uri.len -= 2;
+            
+            opts.root_dir = "/ui/dist";
+            opts.fs = &mg_fs_packed;
+        } else {
+            opts.root_dir = "./cb_public";
+        }
+
+        mg_http_serve_dir(c, ev_data, &opts);
     }
 }
 
@@ -84,7 +107,7 @@ int create_directory_if_not_exists(const char *dir_name) {
 
 int init_dir() {
     int ret = 0;
-    // ret += create_directory_if_not_exists("cb_public");
+    ret += create_directory_if_not_exists("cb_public");
     ret += create_directory_if_not_exists("cb_data");
     return ret;
 }
@@ -93,7 +116,7 @@ int main(void) {
     struct mg_mgr mgr;
 
     if(init_dir() != 0) return 1;
-    if(init_db() != 0) return 1;
+    if(db_init() != 0) return 1;
     if(init_mg(&mgr) != 0) return 1;
 
     // Set up HTTP server
@@ -106,6 +129,6 @@ int main(void) {
 
     // Cleanup
     mg_mgr_free(&mgr);
-    close_db();
+    db_close();
     return 0;
 }

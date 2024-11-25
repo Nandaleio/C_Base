@@ -1,21 +1,30 @@
-import { defineConfig } from 'vite';
-import preact from '@preact/preset-vite';
-import viteCompression from 'vite-plugin-compression';
+import { fileURLToPath, URL } from 'node:url'
 
-// https://vitejs.dev/config/
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
+import vueDevTools from 'vite-plugin-vue-devtools'
+
+// https://vite.dev/config/
 export default defineConfig({
-	plugins: [
-		preact(), 
-		//viteCompression()
-	],
-	build: {
-		rollupOptions: {
-			output: {
-				entryFileNames: `[name].js`,
-				chunkFileNames: `[name].js`,
-				assetFileNames: `[name].[ext]`
-			}
-		}
-	}
-});
-
+  plugins: [
+    vue(),
+    vueJsx(),
+    vueDevTools(),
+  ],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    },
+  },
+  base: '/_/',
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: `[name].js`,
+        chunkFileNames: `[name].js`,
+        assetFileNames: `[name].[ext]`
+      }
+    }
+  }
+})
