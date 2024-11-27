@@ -19,7 +19,7 @@ interface Props {
 
         <span v-if="item.separator" class="separator"></span>
 
-        <button v-else @click="router.push(item.path || '/')">
+        <a v-else @click="router.push(item.path || '/')">
 
             <span v-if="item.icon" class="material-symbols-outlined">
                 {{ item.icon }}
@@ -27,12 +27,12 @@ interface Props {
 
             <template v-else>{{ item.label }}</template>
 
-        </button>
+        </a>
     </template>
   </div>
 </template>
 
-<style>
+<style scoped>
 .nav {
     display: flex;
     flex-direction: column;
@@ -41,10 +41,13 @@ interface Props {
     background-color: var(--container-secondary-color);
     height: 100%;
     padding: 1rem;
-}
 
-.separator{
-    flex-grow: 1;
+    a {
+        cursor: pointer;
+    }
+    
+    .separator{
+        flex-grow: 1;
+    }
 }
-
 </style>

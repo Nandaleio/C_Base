@@ -2,13 +2,13 @@
 CC = gcc
 
 # Compiler Flags
-CFLAGS = -O2 -Wall -Wextra -DMG_ENABLE_PACKED_FS=1 -w
+CFLAGS = -O2 -Wall -Wextra -DMG_ENABLE_PACKED_FS=1 -w -DLOG_USE_COLOR
 
 # Include Paths
 INCLUDES = -I./  # Ensure this points to mongoose.h and sqlite3.h if needed
 
 # Source files
-SRCS = main.c ./libs/sqlite3.c ./libs/mongoose.c fs.c ./modules/db.c ./modules/utils.c
+SRCS = main.c ./libs/sqlite3.c ./libs/mongoose.c ./libs/log.c fs.c ./modules/db.c ./modules/utils.c ./modules/jwt.c
 
 # Linker Flags for Windows (add ws2_32 for networking support)
 LDFLAGS = -lws2_32 

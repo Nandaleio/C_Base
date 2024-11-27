@@ -1,10 +1,8 @@
 #ifndef DB_H
 #define DB_H
 
-#include <stdio.h>
 #include "../libs/sqlite3.h"
 #include "../libs/mongoose.h"
-#include "../libs/kvec.h"
 
 // SQLite db file location
 #define DB_PATH  "cb_data/data.db"
@@ -22,6 +20,11 @@ int db_init();
 int db_close();
 char *db_sqlite_to_json(sqlite3_stmt *stmt);
 char *db_query(char *query);
-char *login(char* username, char *password);
+
+char *db_get_tables();
+
+//AUTH :
+char *db_add_user(char *username, char *password);
+char *db_login(char* username, char *password);
 
 #endif

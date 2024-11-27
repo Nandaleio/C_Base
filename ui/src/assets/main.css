@@ -1,4 +1,4 @@
-@import './bolt.min.css';
+@import './pico.blue.min.css';
 
 
 body,#app{
@@ -12,8 +12,23 @@ body {
     --container-color: #e3e3e3; 
     --container-secondary-color:#233142; 
 
-}
 
-.primary {
-    background-color: var(--primary-color);
+    --pico-primary: var(--primary-color);
+    --pico-primary-background: var(--primary-color);
+    --pico-primary-border: var(--pico-primary-background);
+    --pico-primary-hover: #c34646;
+    --pico-primary-hover-background: #db3c3c;
+    --pico-primary-hover-border: var(--pico-primary-hover-background);
+    --pico-primary-hover-underline: var(--pico-primary-hover);
+
+    --pico-secondary: var(--secondary-color);
+    --pico-secondary-background: var(--secondary-color);
+    --pico-secondary-border: var(--pico-secondary-background);
+    --pico-secondary-underline: rgba(93, 107, 137, 0.5);
+    --pico-secondary-hover: #48536b;
+    --pico-secondary-hover-background: #48536b;
+    --pico-secondary-hover-border: var(--pico-secondary-hover-background);
+    --pico-secondary-hover-underline: var(--pico-secondary-hover);
+    --pico-secondary-focus: rgba(93, 107, 137, 0.25);
+    --pico-secondary-inverse: #fff;
 }

@@ -1,11 +1,17 @@
 <script setup lang="ts">
     import { env } from '@/utils/env';
     import { ref } from 'vue';
+    import CircularLoader from '@/components/CircularLoader.vue';
 
     const sqlQuery = ref('');
-    const list = ref([]);
+
+    const loading = ref(false);
+    const error = ref();
+    const cols = ref([]);
+    const data = ref([]);
 
     async function query() {
+        loading.value = true;
         const token = localStorage.getItem(env.localStorageTokenKey) 
         const res = await fetch(`${env.apiURL}/api/query`, {
             method: "POST",
@@ -14,53 +20,39 @@
             },
             body: JSON.stringify({query: sqlQuery.value})
         })
-        console.log('res',res)
         if(res.ok) {
-            list.value = await res.json();
-            
-            console.log('value',list.value)
+            const {columns, data, error} = await res.json();
+            cols.value = columns;
+            data.value = data;
+            error.value = error;
         }
-
+        loading.value = false;
     }
 </script>
 
 <template>
     <div class="main-container">
         <textarea v-model="sqlQuery" name="sqlQuery"></textarea>
-        <button @click="query">run</button>
+        <button class="primary" @click="query">run</button>
         <div class="content">
-            <table v-if="list && list.length">
+            <CircularLoader v-if="loading" size="60px" color="#e74c3c" thickness="6px" speed="0.8s"></CircularLoader>
+            <table v-else-if="cols && cols.length">
                 <thead>
                     <tr>
-                    <th>Name</th>
-                    <th>Home Runs</th>
-                    <th>AVG</th>
+                    <th v-for="col of cols">
+                        {{ col }}
+                    </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                    <td>Mike Trout</td>
-                    <td>45</td>
-                    <td>.291</td>
-                    </tr>
-                    <tr>
-                    <td>Christian Yelich</td>
-                    <td>44</td>
-                    <td>.329</td>
-                    </tr>
-                    <tr>
-                    <td>Mookie Betts</td>
-                    <td>29</td>
-                    <td>.295</td>
-                    </tr>
-                    <tr>
-                    <td>Cody Bellinger</td>
-                    <td>47</td>
-                    <td>.305</td>
+                    <tr v-for="d of data">
+                        <td v-for="col of cols">
+                            {{ d[col] }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
-
+            <pre v-else-if="error" class="error">{{ error }}</pre>
         </div>
     </div>
 </template>
@@ -75,8 +67,17 @@
     
     .content {
 
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        height: 100%;
+
         table {
             width: 100%;
+        }
+
+        .error{
+            color: red;
         }
     }
 

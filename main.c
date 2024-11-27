@@ -11,7 +11,9 @@
 #include <stdlib.h>   // Required for alloca and rand
 #include "modules/db.h"
 #include "modules/utils.h"
-#include "libs/mongoose.h" // Include Mongoose header file
+#include "libs/mongoose.h"
+#include "libs/log.h"
+#include "modules/jwt.h"
 
 //#define PUBLIC_DIR "cb_public"
 
@@ -30,54 +32,79 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
             return mg_http_reply(c, 204, MG_API_HEADERS"Access-Control-Allow-Headers: *\r\n\r\n", "{\"res\": \"No Content\"}");
     } 
 
+    if(mg_match(hm->uri, mg_str("/api/auth/register"), NULL)) {
+        char *username = mg_json_get_str(hm->body, "$.username");
+        char *password = mg_json_get_str(hm->body, "$.password");
+        char *result = db_add_user(username, password) ;
+        return mg_http_reply(c, 200, MG_API_HEADERS, result);
+    }
+    
+    if(mg_match(hm->uri, mg_str("/api/auth/login"), NULL)) {
+        char *username = mg_json_get_str(hm->body, "$.username");
+        char *password = mg_json_get_str(hm->body, "$.password");
+        char *json = db_login(username, password);
+        return mg_http_reply(c, 200, MG_API_HEADERS, "{\"token\": \"%s\"}\n", json);
+    }
+
+    // ----- SECURED API -----
     if(mg_match(hm->uri, mg_str("/api/#"), NULL)) {
 
-        struct user *u = db_get_user(hm);
-        if(u == NULL) {
-           return mg_http_reply(c, 403, "", "Denied\n");
-        }
+        struct mg_str *auth_header = mg_http_get_header(hm, "Authorization");
+        if (auth_header != NULL) {
+            const char *token = auth_header->buf + 7;
+            size_t token_len = auth_header->len - 7;
 
-        if(mg_match(hm->uri, mg_str("*/login"), NULL)) {
-            return mg_http_reply(c, 200, MG_API_HEADERS, "{\"token\": \"%s\"}\n", u->token);
+            log_debug("Bearer token: %.*s", (int) token_len, token);
+
+            if(jwt_verify(token, JWT_SECRET_KEY) != 0) return;
+
+        } else { 
+            return;
         }
 
         
         if(mg_match(hm->uri, mg_str("*/query"), NULL)) {
             char *query = mg_json_get_str(hm->body, "$.query");
-            printf("received query : %s \r\n", query);
             char *json = db_query(query);
+            mg_http_reply(c, 200, MG_API_HEADERS, json);
+            free(json);
+            return;
+        }
+
+        if (mg_match(hm->uri, mg_str("*/tables/*"), NULL)) {
+            char **json = db_get_tables();
             mg_http_reply(c, 200, MG_API_HEADERS, json);
             free(json);
             return;
         }
         
         if (mg_match(hm->uri, mg_str("*/tables"), NULL)) {
-            char *query = "SELECT name FROM sqlite_master WHERE type='table' and name not like 'sqlite_%' and name != 'admin'";
-            char *json = db_query(query);
+            char **json = db_get_tables();
             mg_http_reply(c, 200, MG_API_HEADERS, json);
             free(json);
             return;
         }
 
         return mg_http_reply(c, 204, MG_API_HEADERS"Access-Control-Allow-Headers: *\r\n\r\n", "{\"res\": \"No Content\"}");
+    } 
 
-    } else {
+    // ----- UNPROTECTED API -----
 
-        struct mg_http_serve_opts opts;
-        memset(&opts, 0, sizeof(opts));
+    struct mg_http_serve_opts opts;
+    memset(&opts, 0, sizeof(opts));
 
-        if(mg_match(hm->uri, mg_str("/_/#"), NULL)) {
+    if(mg_match(hm->uri, mg_str("/_/#"), NULL)) {
             hm->uri.buf += 2;
             hm->uri.len -= 2;
             
             opts.root_dir = "/ui/dist";
             opts.fs = &mg_fs_packed;
-        } else {
+    } else {
             opts.root_dir = "./cb_public";
-        }
-
-        mg_http_serve_dir(c, ev_data, &opts);
     }
+
+    mg_http_serve_dir(c, ev_data, &opts);
+    
 }
 
 // Initialize Mongoose
@@ -86,7 +113,7 @@ int init_mg(struct mg_mgr *mgr){
     mg_mgr_init(mgr);
     nc = mg_http_listen(mgr, s_http_port, ev_handler, NULL);
     if (nc == NULL) {
-        fprintf(stderr, "Failed to create listener\n");
+        log_error("Failed to create listener");
         return 1;
     }
     return 0;
@@ -96,9 +123,9 @@ int create_directory_if_not_exists(const char *dir_name) {
     struct stat st = {0};
     if (stat(dir_name, &st) == -1) {
         if (mkdir(dir_name, 0755) == 0) {
-            fprintf(stdout, "Directory '%s' created successfully.\n", dir_name);
+            log_trace(stdout, "Directory '%s' created successfully.", dir_name);
         } else {
-            fprintf(stderr, "mkdir error while creating directory: %s\n", dir_name);
+            log_error("mkdir error while creating directory: %s", dir_name);
             return 1;
         }
     }
@@ -120,7 +147,7 @@ int main(void) {
     if(init_mg(&mgr) != 0) return 1;
 
     // Set up HTTP server
-    fprintf(stdout, "Starting web server on %s\n", s_http_port);
+    log_info("Starting web server on %s", s_http_port);
 
     // Event loop
     while (1) {
