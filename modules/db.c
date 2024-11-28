@@ -6,35 +6,6 @@
 #include "utils.h"
 #include "jwt.h"
 
-// Parse HTTP requests, return authenticated user or NULL
-struct user *db_get_user(struct mg_http_message *hm) {
-
-    //TODO use SQLite DB
-    static struct user users[] = {
-        {"admin", "admin", "admin_token"},
-        {"user1", "pass1", "user1_token"},
-        {"user2", "pass2", "user2_token"},
-        {NULL, NULL, NULL},
-    };
-
-    char user[256], pass[256];
-    struct user *u;
-    mg_http_creds(hm, user, sizeof(user), pass, sizeof(pass));
-
-    log_debug("Credentials: %s: %s\r", user, pass);
-    if (user[0] == '\0') { // token auth
-        for (u = users; u->name != NULL; u++)
-        if (strcmp(pass, u->token) == 0) {
-            return u;
-        }
-    } else if (user[0] != '\0' && pass[0] != '\0') { // login user & pass
-        for (u = users; u->name != NULL; u++)
-        if (strcmp(user, u->name) == 0 && strcmp(pass, u->pass) == 0) {
-            return u;
-        }
-    }
-    return NULL;
-}
 
 int db_init() {
     
@@ -102,7 +73,6 @@ int db_close() {
 
 char *db_query(char* query) {
 
-
     log_debug("received query : %s \r", query);
 
     sqlite3_stmt *stmt;
@@ -113,9 +83,7 @@ char *db_query(char* query) {
 
     char *json = db_sqlite_to_json(stmt);
 
-    if (json) {
-        log_debug("JSON Result:%s", json);
-    } else {
+    if (!json) {
         log_error("Failed to convert result set to JSON");
     }
 
@@ -128,6 +96,14 @@ char *db_query(char* query) {
 
 char *db_get_tables() {
     char *query = "SELECT name FROM sqlite_master WHERE type='table' and name not like 'sqlite_%' and name not in ('admin', 'log')";
+    char *json = db_query(query);
+    return json;
+}
+
+char *db_get_table(char *table_name) {
+    char *query = "SELECT * FROM ";
+    strcat(query, table_name);
+    log_debug(query);
     char *json = db_query(query);
     return json;
 }
@@ -150,8 +126,9 @@ char *db_add_user(char *username, char *password) {
         return "{\"error\": \"Failed to bind username parameter\"}";
     }
 
-    char salt[SALT_LENGTH];
+    char salt[SALT_LENGTH+1];
     char *hash_pass = hash_password(password, salt);
+    log_debug("after hash_pass: %s", hash_pass);
 
     if (sqlite3_bind_text(stmt, 2, salt, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
@@ -160,6 +137,7 @@ char *db_add_user(char *username, char *password) {
 
     if (sqlite3_bind_text(stmt, 3, hash_pass, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind password parameter: %s", sqlite3_errmsg(db));
+        free(hash_pass); 
         return "{\"error\": \"Failed to bind password parameter\"}";
     }
 
@@ -167,12 +145,13 @@ char *db_add_user(char *username, char *password) {
         log_error("Failed to insert user: %s", sqlite3_errmsg(db));
         return "{\"error\": \"Failed to insert user\"}";
 	}
-
     
 	if(sqlite3_finalize(stmt) != SQLITE_OK){
         log_error("Failed finalize statement: %s", sqlite3_errmsg(db));
         return "{\"error\": \"Failed finalize statement:\"}";
     }
+    
+    free(hash_pass); 
 
     return "{\"error\": \"\"}";
 }
@@ -192,19 +171,14 @@ char *db_login(char *username, char *password) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
         return "{\"error\": \"Failed to bind username parameter\"}";
     }
-    
-    log_trace("qsdqsdqsdqsdqsd row ?");
 
     if(sqlite3_step(stmt) != SQLITE_ROW) {
-        log_error("Failed to insert user: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to insert user\"}";
+        log_error("Failed to get user row: %s", sqlite3_errmsg(db));
+        return "{\"error\": \"Failed to get user row\"}";
 	}
 
-    
-    log_trace("IS row ?");
-
-    char* hashed_password = sqlite3_column_text(stmt, 1);
-    char* salt = sqlite3_column_text(stmt, 2);
+    char* hashed_password = sqlite3_column_text(stmt, 0);
+    char* salt = sqlite3_column_text(stmt, 1);
 
     if(check_password(hashed_password, password, salt) != 0) {
         log_error("The passwords doesn't match");

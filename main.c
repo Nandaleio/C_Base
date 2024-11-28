@@ -8,7 +8,9 @@
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>   // Required for alloca and rand
+#include <stdlib.h>
+#include <signal.h>
+
 #include "modules/db.h"
 #include "modules/utils.h"
 #include "libs/mongoose.h"
@@ -21,6 +23,12 @@
 
 // Initialize Mongoose server options
 char *s_http_port = "http://localhost:8080";
+
+static volatile int running = 1;
+
+void shut_down(int dummy) {
+    running = 0;
+}
 
 // HTTP event handler
 static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
@@ -49,17 +57,22 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     // ----- SECURED API -----
     if(mg_match(hm->uri, mg_str("/api/#"), NULL)) {
 
-        struct mg_str *auth_header = mg_http_get_header(hm, "Authorization");
-        if (auth_header != NULL) {
-            const char *token = auth_header->buf + 7;
-            size_t token_len = auth_header->len - 7;
+        //struct mg_str *auth_header = mg_http_get_header(hm, "Authorization");
 
-            log_debug("Bearer token: %.*s", (int) token_len, token);
+        char user[100], token[100];
+        mg_http_creds(hm, user, sizeof(user), token, sizeof(token));
+        if (token != NULL) {
+            //const char *token = auth_header->buf + 7;
+           // size_t token_len = auth_header->len - 7;
 
-            if(jwt_verify(token, JWT_SECRET_KEY) != 0) return;
+            log_debug("token: %s", token);
 
+            if(jwt_verify(token, JWT_SECRET_KEY) != 0) {
+                log_debug("qdqsdqsdqsdqsd:");
+                return mg_http_reply(c, 401, MG_API_HEADERS, "{\"res\": \"Unauthorized\"}");
+            } 
         } else { 
-            return;
+            return mg_http_reply(c, 401, MG_API_HEADERS, "{\"res\": \"Unauthorized\"}");
         }
 
         
@@ -71,15 +84,16 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
             return;
         }
 
-        if (mg_match(hm->uri, mg_str("*/tables/*"), NULL)) {
-            char **json = db_get_tables();
+        struct mg_str caps[2];
+        if (mg_match(hm->uri, mg_str("*/table/*"), caps)) {
+            char *json = db_get_table(caps[0].buf);
             mg_http_reply(c, 200, MG_API_HEADERS, json);
             free(json);
             return;
         }
-        
+
         if (mg_match(hm->uri, mg_str("*/tables"), NULL)) {
-            char **json = db_get_tables();
+            char *json = db_get_tables();
             mg_http_reply(c, 200, MG_API_HEADERS, json);
             free(json);
             return;
@@ -149,12 +163,14 @@ int main(void) {
     // Set up HTTP server
     log_info("Starting web server on %s", s_http_port);
 
-    // Event loop
-    while (1) {
+    signal(SIGINT, shut_down);
+
+    while (running) { 
         mg_mgr_poll(&mgr, 1000);
     }
+    
+    log_info("Shuting down...");
 
-    // Cleanup
     mg_mgr_free(&mgr);
     db_close();
     return 0;

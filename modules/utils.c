@@ -1,11 +1,11 @@
 
 
+#include "db.h"
 #include <stddef.h>
 #include <stdio.h>
 #include "utils.h"
 #include "../libs/log.h"
 #include "../libs/mongoose.h"
-#include "db.h"
 
 char *convert_array_to_json(char **array, int array_size) {
     if (array == NULL || array_size <= 0) {
@@ -207,12 +207,12 @@ char *db_sqlite_to_json(sqlite3_stmt *stmt) {
 }
 
 char *hash_password(char* password, char* salt) {
-    mg_random_str(salt, strlen(salt));
+    mg_random_str(salt, SALT_LENGTH+1);
     mg_sha256_ctx ctx;
     mg_sha256_init(&ctx);
     mg_sha256_update(&ctx, password, strlen(password));
     mg_sha256_update(&ctx, salt, strlen(salt));
-    unsigned char hash_pass[strlen(salt)+strlen(password)];
+    unsigned char *hash_pass = malloc(32);
     mg_sha256_final(hash_pass, &ctx);
     return hash_pass;
 }
@@ -222,10 +222,11 @@ int check_password(char *hashed_password, char* password, char* salt) {
     mg_sha256_init(&ctx);
     mg_sha256_update(&ctx, password, strlen(password));
     mg_sha256_update(&ctx, salt, strlen(salt));
-    unsigned char hash_pass[strlen(salt)+strlen(password)];
+    unsigned char *hash_pass = malloc(32);
     mg_sha256_final(hash_pass, &ctx);
-    log_debug("%s == %s", hashed_password, hash_pass);
-    return strcmp(hashed_password, hash_pass);
+    int ret = memcmp(hashed_password, hash_pass, 32);
+    free(hash_pass);
+    return ret;
 }
 
 char *base64_encode(const unsigned char *input, int length) {

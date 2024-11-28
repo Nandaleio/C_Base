@@ -15,15 +15,18 @@ typedef struct user {
 
 sqlite3 *db;
 
-struct user *db_get_user(struct mg_http_message *hm);
 int db_init();
 int db_close();
+
+// UTILS
 char *db_sqlite_to_json(sqlite3_stmt *stmt);
 char *db_query(char *query);
 
+//TABLES
 char *db_get_tables();
+char *db_get_table(char *table_name);
 
-//AUTH :
+//AUTH
 char *db_add_user(char *username, char *password);
 char *db_login(char* username, char *password);
 
