@@ -50,7 +50,7 @@ int jwt_verify(const char *jwt, const char *secret) {
     log_debug("hmac: %s",hmac);
 
     char *expected_signature = base64_encode(hmac, sizeof(hmac));
-    int valid = memcmp(received_signature, expected_signature) == 0;
+    int valid = memcmp(received_signature, expected_signature, strlen(expected_signature)) == 0;
 
     free(expected_signature);
     free(received_signature);
