@@ -16,7 +16,8 @@ A [Pocketbase](https://pocketbase.io/) alternative _(or copy)_ written in C and 
 Just run the C_Base.exe.\
 C_Base will create several folders :
 - **cb_data**: store the SQLite DB, files and logs
-- **cb_public**: serve static files (eg: the web site that will consume the API)
+- **cb_public**: serve static files _(eg: the web site that will consume the API)_
+- **cb_hooks**: contains the custom JS behaviour **_(not implemented yet)_**
 
 **Windows is currently the only supported platforms !** 
 
@@ -28,4 +29,7 @@ C_Base will create several folders :
 ## TODO : 
 
 - [ ] JWT check: expiration date
+- [ ] Prevent access to password and salt from user table
 - [ ] Add mongoose errors + input req + sqlite errors in the log table
+- [ ] Create table from Admin UI 
+- [ ] API Rules

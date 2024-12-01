@@ -1,8 +1,11 @@
 
 
-#include "db.h"
-#include "../libs/log.h"
 #include <stdio.h>
+
+#include "../libs/log.h"
+#include "../libs/parson.h"
+
+#include "db.h"
 #include "utils.h"
 #include "jwt.h"
 
@@ -21,10 +24,11 @@ int db_init() {
     int retval;
     char *errMsg = 0;
 
-    char *sql = "CREATE TABLE IF NOT EXISTS admin ("
+    char *sql = "CREATE TABLE IF NOT EXISTS " ADMIN_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "email TEXT UNIQUE NOT NULL, "
-        "password TEXT NOT NULL "
+        "password TEXT NOT NULL, "
+        "salt TEXT NOT NULL "
     ")";
 
     // Execute the SQL statement
@@ -36,7 +40,7 @@ int db_init() {
         log_trace("Table \"admin\" created successfully.");
     }
 
-    sql = "CREATE TABLE IF NOT EXISTS user ("
+    sql = "CREATE TABLE IF NOT EXISTS " USER_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
         "username TEXT UNIQUE NOT NULL, "
@@ -51,7 +55,7 @@ int db_init() {
         log_trace("Table \"user\" created successfully.");
     }
 
-    sql = "CREATE TABLE IF NOT EXISTS log ("
+    sql = "CREATE TABLE IF NOT EXISTS " LOG_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
         "level TEXT NOT NULL, "
@@ -96,7 +100,7 @@ char *db_query(char* query) {
 }
 
 char *db_get_tables() {
-    char *query = "SELECT name FROM sqlite_master WHERE type='table' and name not like 'sqlite_%' and name not in ('admin', 'log')";
+    char *query = "SELECT name FROM sqlite_master WHERE type='table' and name not like 'sqlite_%' and name not like 'cb_%'";
     char *json = db_query(query);
     return json;
 }
@@ -111,7 +115,7 @@ char *db_get_table(char *table_name) {
 char *db_add_user(char *username, char *password) {
     
     log_info("Adding new user: %s", username);
-    char* query = "INSERT INTO user (username, salt, password) VALUES (?,?,?)";
+    char* query = "INSERT INTO " USER_TABLE " (username, salt, password) VALUES (?,?,?)";
 
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
@@ -156,7 +160,7 @@ char *db_add_user(char *username, char *password) {
 char *db_login(char *username, char *password) {
     
     log_trace("User %s logging in", username);
-    char *query = "select password, salt from user where username = ?";
+    char *query = "select password, salt from " USER_TABLE " where username = ?";
     
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
@@ -182,8 +186,66 @@ char *db_login(char *username, char *password) {
         return "{\"error\": \"wrong password\"}";
     }
 
-    const char *payload = "{\"sub\":\"1234567890\",\"name\":\"John Doe\",\"iat\":1516239022}";
+    JSON_Value *payload_value = json_value_init_object();
+    JSON_Object *payload_object = json_value_get_object(payload_value);
+    char *serialized_string = NULL;
+    json_object_set_string(payload_object, "sub", username);
+    json_object_set_string(payload_object, "username", username);
+    json_object_set_number(payload_object, "iat", (unsigned long)time(NULL));
+    const char *payload = json_serialize_to_string_pretty(payload_value);
+
     char *jwt = jwt_sign(JWT_DEFAULT_HEADER, payload, JWT_SECRET_KEY);
+    
+    json_free_serialized_string(serialized_string);
+    json_value_free(payload_value);
+    
+    char *json = malloc(strlen(jwt) + 20);
+    sprintf(json, "{\"token\": \"%s\"}", jwt);
+    return json;
+}
+
+char *db_admin_login(char *username, char *password) {
+    
+    log_trace("User %s logging in", username);
+    char *query = "select password, salt from " ADMIN_TABLE " where username = ?";
+    
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
+        return "{\"error\": \"Failed to prepare statement\"}";
+    }
+    
+    if (sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC) != SQLITE_OK) {
+        log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
+        return "{\"error\": \"Failed to bind username parameter\"}";
+    }
+
+    if(sqlite3_step(stmt) != SQLITE_ROW) {
+        log_error("Failed to get user row: %s", sqlite3_errmsg(db));
+        return "{\"error\": \"Failed to get user row\"}";
+	}
+
+    char* hashed_password = sqlite3_column_text(stmt, 0);
+    char* salt = sqlite3_column_text(stmt, 1);
+
+    if(check_password(hashed_password, password, salt) != 0) {
+        log_error("The passwords doesn't match");
+        return "{\"error\": \"wrong password\"}";
+    }
+
+    JSON_Value *payload_value = json_value_init_object();
+    JSON_Object *payload_object = json_value_get_object(payload_value);
+    char *serialized_string = NULL;
+    json_object_set_string(payload_object, "sub", username);
+    json_object_set_string(payload_object, "username", username);
+    json_object_set_number(payload_object, "iat", (unsigned long)time(NULL));
+    const char *payload = json_serialize_to_string_pretty(payload_value);
+
+    char *jwt = jwt_sign(JWT_DEFAULT_HEADER, payload, JWT_SECRET_KEY);
+    
+    json_free_serialized_string(serialized_string);
+    json_value_free(payload_value);
+    
     char *json = malloc(strlen(jwt) + 20);
     sprintf(json, "{\"token\": \"%s\"}", jwt);
     return json;

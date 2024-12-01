@@ -8,10 +8,9 @@ import { ref } from 'vue'
   const password = ref('');
 
   async function login() {
-    const res = await fetch(`${env.apiURL}/api/login`, {
-      headers: {
-        Authorization: `Basic ${btoa(`${username.value}:${password.value}`)}` 
-      },
+    const res = await fetch(`${env.apiURL}/api/auth/login`, {
+      method: 'post',
+      body: JSON.stringify({username: username.value, password: password.value})
     })
     if(res.ok) {
       const {token} = await res.json();
@@ -24,10 +23,10 @@ import { ref } from 'vue'
 
 <template>
   <div class="login-form">
-    <h1>C_Base Admin Login</h1>
-    <input type="email" v-model="username" placeholder="Email">
-    <input type="password" v-model="password" placeholder="Password">
-    <button class="primary" @click="login">Login</button>
+      <h1>C_Base Admin Login</h1>
+      <input type="text" v-model="username" placeholder="Username">
+      <input type="password" v-model="password" placeholder="Password">
+      <button class="primary" @click="login">Login</button>
   </div>
 </template>
 
@@ -40,5 +39,9 @@ import { ref } from 'vue'
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  input{
+    width: 20%;
+  }
 }
 </style>
