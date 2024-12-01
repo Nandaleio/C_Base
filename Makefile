@@ -8,7 +8,7 @@ CFLAGS = -O2 -Wall -Wextra -DMG_ENABLE_PACKED_FS=1 -w -DLOG_USE_COLOR
 INCLUDES = -I./  # Ensure this points to mongoose.h and sqlite3.h if needed
 
 # Source files
-SRCS = main.c ./libs/sqlite3.c ./libs/mongoose.c ./libs/log.c fs.c ./modules/db.c ./modules/utils.c ./modules/jwt.c
+SRCS = main.c ./libs/sqlite3.c ./libs/mongoose.c ./libs/log.c ./libs/parson.c fs.c ./modules/db.c ./modules/utils.c ./modules/jwt.c
 
 LDFLAGS :=
 TARGET :=
@@ -22,9 +22,8 @@ else ifeq ($(UNAME_S),Darwin)
   TARGET = C_Base
   $(info OSX build...)
 else
-# Linker Flags for Windows (add ws2_32 for networking support)
   CFLAGS += -D Windows
-  LDFLAGS = -lws2_32 
+  LDFLAGS = -lws2_32  # Linker Flags for Windows (add ws2_32 for networking support)
   TARGET = C_Base.exe
   $(info Windows build...)
 endif
