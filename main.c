@@ -14,9 +14,10 @@
 
 #include "modules/db.h"
 #include "modules/utils.h"
+#include "modules/jwt.h"
+#include "libs/parson.h"
 #include "libs/mongoose.h"
 #include "libs/log.h"
-#include "modules/jwt.h"
 
 #define CBASE_VERSION "0.0.1"
 
@@ -139,6 +140,7 @@ int init_dir() {
     int ret = 0;
     ret += create_directory_if_not_exists("cb_public");
     ret += create_directory_if_not_exists("cb_data");
+    ret += create_directory_if_not_exists("cb_hooks");
 
     return ret;
 }
@@ -157,6 +159,7 @@ int handle_arguments(int argc, char *argv[]) {
             log_info("C_BASE version: %s", CBASE_VERSION);
             log_info("Mongoose version: %s", MG_VERSION);
             log_info("SQLite version: %s", SQLITE_VERSION);
+            log_info("Parson version: %s", PARSON_VERSION_STRING);
             log_info("Log version: %s", LOG_VERSION);
             ret += 1;
         } else if (strcmp(argv[i], "--host") == 0 || strcmp(argv[i], "-p") == 0) {

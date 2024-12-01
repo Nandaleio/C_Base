@@ -7,6 +7,10 @@
 #define DB_PATH  "cb_data/data.db"
 #define LOG_PATH  "cb_data/logs.log"
 
+#define ADMIN_TABLE "cb_admin"
+#define LOG_TABLE "cb_log"
+#define USER_TABLE "user"
+
 typedef struct user {
   const char *name;
   const char *pass; 
@@ -29,5 +33,6 @@ char *db_get_table(char *table_name);
 //AUTH
 char *db_add_user(char *username, char *password);
 char *db_login(char* username, char *password);
+char *db_admin_login(char *username, char *password);
 
 #endif

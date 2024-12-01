@@ -33,10 +33,11 @@
 <template>
     <div class="main-container">
         <textarea v-model="sqlQuery" name="sqlQuery"></textarea>
-        <button class="primary" @click="query">run</button>
-        <div class="content">
-            <CircularLoader v-if="loading" size="60px" color="#e74c3c" thickness="6px" speed="0.8s"></CircularLoader>
-            <table v-else-if="cols && cols.length">
+        <div class="actions">
+            <button class="primary" @click="query">run</button>
+        </div>
+        <div class="content" :aria-busy="loading">
+            <table v-if="cols && cols.length">
                 <thead>
                     <tr>
                     <th v-for="col of cols">
@@ -65,6 +66,10 @@
     padding: 1rem;
     gap: 1rem;
     
+    .actions{
+        display: flex;
+    }
+
     .content {
 
         display: flex;
