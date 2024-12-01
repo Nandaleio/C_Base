@@ -5,6 +5,7 @@
 
 // SQLite db file location
 #define DB_PATH  "cb_data/data.db"
+#define LOG_PATH  "cb_data/logs.log"
 
 typedef struct user {
   const char *name;

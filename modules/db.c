@@ -104,7 +104,6 @@ char *db_get_tables() {
 char *db_get_table(char *table_name) {
     char *query = "SELECT * FROM ";
     strcat(query, table_name);
-    log_debug(query);
     char *json = db_query(query);
     return json;
 }
@@ -113,8 +112,6 @@ char *db_add_user(char *username, char *password) {
     
     log_info("Adding new user: %s", username);
     char* query = "INSERT INTO user (username, salt, password) VALUES (?,?,?)";
-
-    log_debug("%s", query);
 
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
@@ -129,7 +126,6 @@ char *db_add_user(char *username, char *password) {
 
     char salt[SALT_LENGTH+1];
     char *hash_pass = hash_password(password, salt);
-    log_debug("after hash_pass: %s", hash_pass);
 
     if (sqlite3_bind_text(stmt, 2, salt, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
@@ -190,6 +186,5 @@ char *db_login(char *username, char *password) {
     char *jwt = jwt_sign(JWT_DEFAULT_HEADER, payload, JWT_SECRET_KEY);
     char *json = malloc(strlen(jwt) + 20);
     sprintf(json, "{\"token\": \"%s\"}", jwt);
-    log_debug("--json: %s", json);
     return json;
 }
