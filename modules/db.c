@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "jwt.h"
 
+sqlite3 *db;
 
 int db_init() {
     
@@ -185,7 +186,10 @@ char *db_login(char *username, char *password) {
         return "{\"error\": \"wrong password\"}";
     }
 
-    const char *header = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
     const char *payload = "{\"sub\":\"1234567890\",\"name\":\"John Doe\",\"iat\":1516239022}";
-    return jwt_sign(header, payload, JWT_SECRET_KEY);
+    char *jwt = jwt_sign(JWT_DEFAULT_HEADER, payload, JWT_SECRET_KEY);
+    char *json = malloc(strlen(jwt) + 20);
+    sprintf(json, "{\"token\": \"%s\"}", jwt);
+    log_debug("--json: %s", json);
+    return json;
 }

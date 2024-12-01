@@ -17,18 +17,13 @@
 #include "libs/log.h"
 #include "modules/jwt.h"
 
-//#define PUBLIC_DIR "cb_public"
-
 #define MG_API_HEADERS "Content-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: *\r\n"
 
 // Initialize Mongoose server options
 char *s_http_port = "http://localhost:8080";
 
 static volatile int running = 1;
-
-void shut_down(int dummy) {
-    running = 0;
-}
+void shut_down(int dummy) { running = 0;}
 
 // HTTP event handler
 static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
@@ -37,44 +32,37 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     struct mg_http_message *hm = (struct mg_http_message *) ev_data;
 
     if (mg_strcmp(hm->method, mg_str("OPTIONS")) == 0) {
-            return mg_http_reply(c, 204, MG_API_HEADERS"Access-Control-Allow-Headers: *\r\n\r\n", "{\"res\": \"No Content\"}");
-    } 
-
-    if(mg_match(hm->uri, mg_str("/api/auth/register"), NULL)) {
-        char *username = mg_json_get_str(hm->body, "$.username");
-        char *password = mg_json_get_str(hm->body, "$.password");
-        char *result = db_add_user(username, password) ;
-        return mg_http_reply(c, 200, MG_API_HEADERS, result);
-    }
-    
-    if(mg_match(hm->uri, mg_str("/api/auth/login"), NULL)) {
-        char *username = mg_json_get_str(hm->body, "$.username");
-        char *password = mg_json_get_str(hm->body, "$.password");
-        char *json = db_login(username, password);
-        return mg_http_reply(c, 200, MG_API_HEADERS, "{\"token\": \"%s\"}\n", json);
+        return mg_http_reply(c, 204, MG_API_HEADERS"Access-Control-Allow-Headers: *\r\n\r\n", "No Content");
     }
 
     // ----- SECURED API -----
     if(mg_match(hm->uri, mg_str("/api/#"), NULL)) {
 
-        //struct mg_str *auth_header = mg_http_get_header(hm, "Authorization");
-
-        char user[100], token[100];
-        mg_http_creds(hm, user, sizeof(user), token, sizeof(token));
-        if (token != NULL) {
-            //const char *token = auth_header->buf + 7;
-           // size_t token_len = auth_header->len - 7;
-
-            log_debug("token: %s", token);
-
-            if(jwt_verify(token, JWT_SECRET_KEY) != 0) {
-                log_debug("qdqsdqsdqsdqsd:");
-                return mg_http_reply(c, 401, MG_API_HEADERS, "{\"res\": \"Unauthorized\"}");
-            } 
-        } else { 
-            return mg_http_reply(c, 401, MG_API_HEADERS, "{\"res\": \"Unauthorized\"}");
+        // EXCEPT REGISTER AND LOGIN
+        if(mg_match(hm->uri, mg_str("/api/auth/register"), NULL)) {
+            char *username = mg_json_get_str(hm->body, "$.username");
+            char *password = mg_json_get_str(hm->body, "$.password");
+            char *result = db_add_user(username, password) ;
+            mg_http_reply(c, 200, MG_API_HEADERS, result);
+            free(result);
+            return;
+        }
+    
+        if(mg_match(hm->uri, mg_str("/api/auth/login"), NULL)) {
+            char *username = mg_json_get_str(hm->body, "$.username");
+            char *password = mg_json_get_str(hm->body, "$.password");
+            char *json = db_login(username, password);
+            mg_http_reply(c, 200, MG_API_HEADERS, json);
+            free(json);
+            return;
         }
 
+        // AUTH CHECK
+        char user[1], token[512];
+        mg_http_creds(hm, user, sizeof(user), token, sizeof(token));
+        if (token == NULL || jwt_verify(token, JWT_SECRET_KEY) != 0) {
+            return mg_http_reply(c, 401, MG_API_HEADERS, "Unauthorized");
+        }
         
         if(mg_match(hm->uri, mg_str("*/query"), NULL)) {
             char *query = mg_json_get_str(hm->body, "$.query");
@@ -99,8 +87,8 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
             return;
         }
 
-        return mg_http_reply(c, 204, MG_API_HEADERS"Access-Control-Allow-Headers: *\r\n\r\n", "{\"res\": \"No Content\"}");
-    } 
+        return mg_http_reply(c, 404, MG_API_HEADERS"Access-Control-Allow-Headers: *\r\n\r\n", "Not Found");
+    }
 
     // ----- UNPROTECTED API -----
 
@@ -118,7 +106,6 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     }
 
     mg_http_serve_dir(c, ev_data, &opts);
-    
 }
 
 // Initialize Mongoose

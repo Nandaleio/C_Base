@@ -2,7 +2,6 @@
 #define DB_H
 
 #include "../libs/sqlite3.h"
-#include "../libs/mongoose.h"
 
 // SQLite db file location
 #define DB_PATH  "cb_data/data.db"
@@ -13,7 +12,7 @@ typedef struct user {
   const char *token;
 } user;
 
-sqlite3 *db;
+extern sqlite3 *db;
 
 int db_init();
 int db_close();

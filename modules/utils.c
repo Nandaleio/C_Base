@@ -7,40 +7,6 @@
 #include "../libs/log.h"
 #include "../libs/mongoose.h"
 
-char *convert_array_to_json(char **array, int array_size) {
-    if (array == NULL || array_size <= 0) {
-        char *empty_json = strdup("[]");
-        return empty_json; // Return an empty JSON array if no tables
-    }
-
-    // Estimate initial buffer size (each name + quotes + comma)
-    size_t buffer_size = 2; // Start with 2 for '[' and ']'
-    for (int i = 0; i < array_size; i++) {
-        buffer_size += strlen(array[i]) + 3; // Quotes + comma
-    }
-
-    // Allocate the buffer
-    char *json = malloc(buffer_size);
-    if (json == NULL) {
-        log_error("Memory allocation failed");
-        return NULL;
-    }
-
-    // Start building the JSON string
-    strcpy(json, "[");
-    for (int i = 0; i < array_size; i++) {
-        strcat(json, "\"");
-        strcat(json, array[i]);
-        strcat(json, "\"");
-        if (i < array_size - 1) {
-            strcat(json, ",");
-        }
-    }
-    strcat(json, "]");
-
-    return json;
-}
-
 /**
  * Converts an SQLite result set to a JSON string.
  *
@@ -229,24 +195,37 @@ int check_password(char *hashed_password, char* password, char* salt) {
     return ret;
 }
 
-char *base64_encode(const unsigned char *input, int length) {
-    static const char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    char *encoded = malloc((length + 2) / 3 * 4 + 1);
-    if (!encoded) return NULL;
+static const char base64url_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+char *base64url_encode(const unsigned char *input, size_t length) {
+    size_t output_length = 4 * ((length + 2) / 3); // Calculate output length
+    char *output = malloc(output_length + 1);     // Allocate memory for encoded string
+    if (!output) return NULL;                     // Memory allocation failed
 
-    char *p = encoded;
-    for (int i = 0; i < length; i += 3) {
-        int a = input[i];
-        int b = i + 1 < length ? input[i + 1] : 0;
-        int c = i + 2 < length ? input[i + 2] : 0;
+    size_t i, j;
+    for (i = 0, j = 0; i < length;) {
+        uint32_t octet_a = i < length ? input[i++] : 0;
+        uint32_t octet_b = i < length ? input[i++] : 0;
+        uint32_t octet_c = i < length ? input[i++] : 0;
 
-        *p++ = b64_table[a >> 2];
-        *p++ = b64_table[((a & 3) << 4) | (b >> 4)];
-        *p++ = b64_table[((b & 15) << 2) | (c >> 6)];
-        *p++ = b64_table[c & 63];
+        uint32_t triple = (octet_a << 16) | (octet_b << 8) | octet_c;
+
+        output[j++] = base64url_chars[(triple >> 18) & 0x3F];
+        output[j++] = base64url_chars[(triple >> 12) & 0x3F];
+        output[j++] = base64url_chars[(triple >> 6) & 0x3F];
+        output[j++] = base64url_chars[triple & 0x3F];
     }
 
-    while ((p - encoded) % 4) *p++ = '=';
-    *p = '\0';
-    return encoded;
+    // Apply padding rules for Base64URL
+    size_t mod = length % 3;
+    if (mod > 0) {
+        output[output_length - 1] = '\0';
+        if (mod == 1) {
+            output[--j] = '\0';
+            output[--j] = '\0';
+        } else if (mod == 2) {
+            output[--j] = '\0';
+        }
+    }
+    output[j] = '\0'; // Null-terminate the string
+    return output;
 }
