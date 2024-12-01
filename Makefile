@@ -29,17 +29,6 @@ else
   $(info Windows build...)
 endif
 
-# Output binary
-
-ifeq ($(UNAME_S),Linux)
-  TCFLAGS += -D LINUX
-else ifeq ($(UNAME_S),Darwin)
-  CFLAGS += -D OSX
-else
-# Linker Flags for Windows (add ws2_32 for networking support)
-  LDFLAGS = -lws2_32 
-endif
-
 # Build the application
 all: $(TARGET)
 
