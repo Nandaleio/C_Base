@@ -1,24 +1,29 @@
 # C_Base
 
-A Pocketbase alternative writen in C and using [Mongoose web server](https://mongoose.ws/) and [SQLite](https://www.sqlite.org/)
+A [Pocketbase](https://pocketbase.io/) alternative _(or copy)_ written in C and using [Mongoose web server](https://mongoose.ws/) and [SQLite](https://www.sqlite.org/)
 
-**This is probably never going to be a production grade application**
+**_!!! This is probably never going to be a production grade application !!!_**
 
 ## Main Features :
 
 - SQLite DB
 - Authentication
-- Embbeded admin UI
-- Less than 5MB executable
+- Embedded admin UI
+- Less than 5MB executable _(might exceed a bit in the future)_
 
 ## How to use:
 
 Just run the C_Base.exe.\
-C_Base will create several folder :
-- cb_data: store the SQLite DB, files and logs
-- cb_public: serve static files (eg: the web site that will consume the API)
+C_Base will create several folders :
+- **cb_data**: store the SQLite DB, files and logs
+- **cb_public**: serve static files (eg: the web site that will consume the API)
 
-**Windows and linux is currently the only supported platforms** 
+**Windows is currently the only supported platforms !** 
+
+## Roadmap :
+
+- [ ] Real time change through websocket
+- [ ] JS engine to add custom behavior _(probably gonna use [Duktape Engine](https://duktape.org/))_
 
 ## TODO : 
 
