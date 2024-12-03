@@ -1,11 +1,12 @@
 
 
-#include "db.h"
 #include <stddef.h>
 #include <stdio.h>
 #include "utils.h"
+#include "db.h"
 #include "../libs/log.h"
 #include "../libs/mongoose.h"
+#include "../libs/parson.h"
 
 /**
  * Converts an SQLite result set to a JSON string.
@@ -16,160 +17,77 @@
 char *db_sqlite_to_json(sqlite3_stmt *stmt) {
     if (!stmt) {
         log_error( "Invalid SQLite statement or database");
-        return strdup("{\"columns\":[],\"data\":[],\"error\":\"Invalid input\"}");
+        return "{\"columns\":[],\"data\":[],\"error\":\"Invalid input\"}";
     }
 
     // Start building the JSON
-    size_t buffer_size = 512;
-    char *json = malloc(buffer_size);
-    if (!json) {
-        log_error("Memory allocation failed");
-        return strdup("{\"columns\":[],\"data\":[],\"error\":\"Memory allocation failed\"}");
-    }
-    strcpy(json, "{");
-    size_t json_len = strlen(json);
-
-    // Columns section
-    strcat(json, "\"columns\":[");
-    json_len += 11;
+    JSON_Value *root_value = json_value_init_object();
+    JSON_Object *root_object = json_value_get_object(root_value);
+    
+    // Add columns array
+    JSON_Value *columns_value = json_value_init_array();
+    JSON_Array *columns_array = json_value_get_array(columns_value);
+    json_object_set_value(root_object, "columns", columns_value);
 
     int col_count = sqlite3_column_count(stmt);
     for (int i = 0; i < col_count; i++) {
         const char *col_name = sqlite3_column_name(stmt, i);
-        size_t col_name_len = strlen(col_name) + 3; // Quotes and comma
-        if (json_len + col_name_len + 1 > buffer_size) {
-            buffer_size *= 2;
-            char *temp = realloc(json, buffer_size);
-            if (!temp) {
-                free(json);
-                return strdup("{\"columns\":[],\"data\":[],\"error\":\"Memory allocation failed\"}");
-            }
-            json = temp;
-        }
-        strcat(json, "\"");
-        strcat(json, col_name);
-        strcat(json, "\"");
-        json_len += col_name_len;
-        if (i < col_count - 1) {
-            strcat(json, ",");
-            json_len++;
-        }
+        json_array_append_string(columns_array, col_name);
     }
-    strcat(json, "],\"data\":[");
-    json_len += 10;
 
-    // Data section
+    // Add data array
+    JSON_Value *data_value = json_value_init_array();
+    JSON_Array *data_array = json_value_get_array(data_value);
+    json_object_set_value(root_object, "data", data_value);
+
     int row_count = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-        size_t row_buffer_size = 256; // Initial size for a single row
-        char *row_json = malloc(row_buffer_size);
-        if (!row_json) {
-            free(json);
-            return strdup("{\"columns\":[],\"data\":[],\"error\":\"Memory allocation failed\"}");
-        }
-        strcpy(row_json, "{");
-        size_t row_len = 1;
+        JSON_Value *row_value = json_value_init_object();
+        JSON_Object *row_object = json_value_get_object(row_value);
 
         for (int i = 0; i < col_count; i++) {
             const char *col_name = sqlite3_column_name(stmt, i);
             int col_type = sqlite3_column_type(stmt, i);
-            char col_value[256] = {0};
 
             switch (col_type) {
-                case SQLITE_INTEGER:
-                    snprintf(col_value, sizeof(col_value), "%lld", sqlite3_column_int64(stmt, i));
-                    break;
                 case SQLITE_FLOAT:
-                    snprintf(col_value, sizeof(col_value), "%g", sqlite3_column_double(stmt, i));
+                case SQLITE_INTEGER:
+                    json_object_set_number(row_object, col_name, sqlite3_column_int64(stmt, i));
                     break;
                 case SQLITE_TEXT:
-                    snprintf(col_value, sizeof(col_value), "\"%s\"", sqlite3_column_text(stmt, i));
+                    json_object_set_string(row_object, col_name, (const char*)sqlite3_column_text(stmt, i));
                     break;
                 case SQLITE_NULL:
-                    strcpy(col_value, "null");
+                    json_object_set_null(row_object, col_name);
                     break;
                 default:
-                    strcpy(col_value, "\"Unsupported type\"");
-            }
-
-            size_t additional_len = strlen(col_name) + strlen(col_value) + 4; // Quotes, colon, comma
-            if (row_len + additional_len + 1 > row_buffer_size) {
-                row_buffer_size *= 2;
-                char *temp = realloc(row_json, row_buffer_size);
-                if (!temp) {
-                    free(row_json);
-                    free(json);
-                    return strdup("{\"columns\":[],\"data\":[],\"error\":\"Memory allocation failed\"}");
-                }
-                row_json = temp;
-            }
-
-            strcat(row_json, "\"");
-            strcat(row_json, col_name);
-            strcat(row_json, "\":");
-            strcat(row_json, col_value);
-            row_len += additional_len;
-
-            if (i < col_count - 1) {
-                strcat(row_json, ",");
-                row_len++;
+                    json_object_set_string(row_object, col_name, "Unsupported type");
             }
         }
 
-        strcat(row_json, "}");
-        row_len++;
-
-        if (json_len + row_len + 2 > buffer_size) { // Resize JSON buffer if needed
-            buffer_size *= 2;
-            char *temp = realloc(json, buffer_size);
-            if (!temp) {
-                free(row_json);
-                free(json);
-                return strdup("{\"columns\":[],\"data\":[],\"error\":\"Memory allocation failed\"}");
-            }
-            json = temp;
-        }
-
-        strcat(json, row_json);
-        json_len += row_len;
-        free(row_json);
-
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            strcat(json, ",");
-            json_len++;
-            sqlite3_reset(stmt); // Reset to re-fetch this row
-        } else {
-            break; // No more rows
-        }
+        json_array_append_value(data_array, row_value);
         row_count++;
+
+        // if (sqlite3_step(stmt) == SQLITE_ROW) {
+        //     sqlite3_reset(stmt); // Reset to re-fetch this row
+        // } else {
+        //     break;
+        // }
     }
 
-    strcat(json, "],\"error\":");
-    json_len += 9;
-
-    // Error section
+    // Add error field
     const char *error_msg = sqlite3_errmsg(db);
     if (row_count == 0 && strlen(error_msg) > 0) {
-        size_t error_len = strlen(error_msg) + 3; // Quotes
-        if (json_len + error_len + 1 > buffer_size) {
-            buffer_size *= 2;
-            char *temp = realloc(json, buffer_size);
-            if (!temp) {
-                free(json);
-                return strdup("{\"columns\":[],\"data\":[],\"error\":\"Memory allocation failed\"}");
-            }
-            json = temp;
-        }
-        strcat(json, "\"");
-        strcat(json, error_msg);
-        strcat(json, "\"");
+        json_object_set_string(root_object, "error", error_msg);
     } else {
-        strcat(json, "null");
+        json_object_set_null(root_object, "error");
     }
 
-    strcat(json, "}"); // Close JSON object
+    // Serialize to string
+    char *json_str = json_serialize_to_string(root_value);
+    json_value_free(root_value);
 
-    return json;
+    return json_str;
 }
 
 char *hash_password(char* password, char* salt) {

@@ -5,6 +5,7 @@ interface Props {
         label?: string
         icon?: string
         path?: string
+        tooltip?: string
         separator?: boolean
     }[],
 }
@@ -19,7 +20,7 @@ interface Props {
 
         <span v-if="item.separator" class="separator"></span>
 
-        <a v-else @click="router.push(item.path || '/')">
+        <a v-else @click="router.push(item.path || '/')" :data-tooltip="item.tooltip" data-placement="right">
 
             <span v-if="item.icon" class="material-symbols-outlined">
                 {{ item.icon }}

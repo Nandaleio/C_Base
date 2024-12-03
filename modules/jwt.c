@@ -54,3 +54,24 @@ int jwt_verify(const char *jwt, const char *secret) {
 
     return valid;
 }
+
+
+int jwt_verify_admin(const char *jwt, const char *secret) {
+    char *base64_header = strtok(jwt, ".");
+    char *base64_payload = strtok(NULL, ".");
+    char *received_signature = strtok(NULL, ".");
+    
+    char *header_payload = malloc(strlen(base64_header) + strlen(base64_payload) + 2);
+    sprintf(header_payload, "%s.%s", base64_header, base64_payload);
+    
+    uint8_t hmac[32];
+    mg_hmac_sha256(hmac, secret, strlen(secret), header_payload, strlen(header_payload));
+
+    char *expected_signature = base64url_encode(hmac, sizeof(hmac));
+    int valid = strcmp(received_signature, expected_signature);
+
+    free(expected_signature);
+    free(received_signature);
+
+    return valid;
+}

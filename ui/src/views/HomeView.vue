@@ -2,11 +2,11 @@
     import Nav from '@/components/Nav.vue'
 
     const list = [
-        {icon: 'database', path: '/tables'},
-        {icon: 'edit', path: '/editor'},
-        {icon: 'description', path: '/logs'},
+        {icon: 'database', path: '/tables', tooltip: "tables"},
+        {icon: 'edit', path: '/editor', tooltip: "editor"},
+        {icon: 'description', path: '/logs', tooltip: "logs"},
         {separator: true, path:''},
-        {icon: 'settings', path: '/settings'},
+        {icon: 'settings', path: '/settings', tooltip: "settings"},
     ]
 </script>
 

@@ -39,16 +39,56 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         return mg_http_reply(c, 204, MG_API_HEADERS"Access-Control-Allow-Headers: *\r\n\r\n", "No Content");
     }
 
+
     // ----- SECURED API -----
     if(mg_match(hm->uri, mg_str("/api/#"), NULL)) {
+
+        // ----- ADMIN SECURED API -----
+
+        if(mg_match(hm->uri, mg_str("/api/admin/#"), NULL)) {
+
+            if(mg_match(hm->uri, mg_str("/api/admin/login"), NULL)) {
+                char *username = mg_json_get_str(hm->body, "$.username");
+                char *password = mg_json_get_str(hm->body, "$.password");
+                char *json = db_admin_login(username, password);
+                mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+                free(json);
+                return;
+            }
+
+            // ADMIN CHECK GUARD
+            char user[1], token[512];
+            mg_http_creds(hm, user, sizeof(user), token, sizeof(token));
+            if (token == NULL || jwt_verify_admin(token, JWT_SECRET_KEY) != 0) {
+                return mg_http_reply(c, 401, MG_API_HEADERS, "Unauthorized");
+            }
+            
+            
+            if(mg_match(hm->uri, mg_str("/api/admin/register"), NULL)) {
+                char *username = mg_json_get_str(hm->body, "$.username");
+                char *password = mg_json_get_str(hm->body, "$.password");
+                char *json = db_add_admin(username, password);
+                mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+                free(json);
+                return;
+            }
+
+            if(mg_match(hm->uri, mg_str("/api/admin/logs"), NULL)) {
+                char *json = db_get_logs();
+                mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+                json_free_serialized_string(json);
+                return;
+            }
+
+        }
 
         // EXCEPT REGISTER AND LOGIN
         if(mg_match(hm->uri, mg_str("/api/auth/register"), NULL)) {
             char *username = mg_json_get_str(hm->body, "$.username");
             char *password = mg_json_get_str(hm->body, "$.password");
-            char *result = db_add_user(username, password) ;
-            mg_http_reply(c, 200, MG_API_HEADERS, result);
-            free(result);
+            char *json = db_add_user(username, password) ;
+            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+            free(json);
             return;
         }
 
@@ -56,12 +96,12 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
             char *username = mg_json_get_str(hm->body, "$.username");
             char *password = mg_json_get_str(hm->body, "$.password");
             char *json = db_login(username, password);
-            mg_http_reply(c, 200, MG_API_HEADERS, json);
+            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
             free(json);
             return;
         }
 
-        // AUTH CHECK
+        // AUTH CHECK GUARD
         char user[1], token[512];
         mg_http_creds(hm, user, sizeof(user), token, sizeof(token));
         if (token == NULL || jwt_verify(token, JWT_SECRET_KEY) != 0) {
@@ -71,23 +111,23 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         if(mg_match(hm->uri, mg_str("*/query"), NULL)) {
             char *query = mg_json_get_str(hm->body, "$.query");
             char *json = db_query(query);
-            mg_http_reply(c, 200, MG_API_HEADERS, json);
-            free(json);
+            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+            json_free_serialized_string(json);
             return;
         }
 
         struct mg_str caps[2];
         if (mg_match(hm->uri, mg_str("*/table/*"), caps)) {
             char *json = db_get_table(caps[0].buf);
-            mg_http_reply(c, 200, MG_API_HEADERS, json);
-            free(json);
+            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+            json_free_serialized_string(json);
             return;
         }
 
         if (mg_match(hm->uri, mg_str("*/tables"), NULL)) {
             char *json = db_get_tables();
-            mg_http_reply(c, 200, MG_API_HEADERS, json);
-            free(json);
+            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+            json_free_serialized_string(json);
             return;
         }
 
@@ -140,7 +180,7 @@ int init_dir() {
     int ret = 0;
     ret += create_directory_if_not_exists("cb_public");
     ret += create_directory_if_not_exists("cb_data");
-    ret += create_directory_if_not_exists("cb_hooks");
+    //ret += create_directory_if_not_exists("cb_hooks");
 
     return ret;
 }
@@ -195,15 +235,19 @@ int main(int argc, char *argv[]) {
 
     struct mg_mgr mgr;
 
+    //trst
+
     if(init_dir() != 0) return 1;
     if(db_init() != 0) return 1;
     if(init_mg(&mgr) != 0) return 1;
+
 
     FILE *fptr;
     fptr = fopen(LOG_PATH, "a");
     if(fptr == NULL || log_add_fp(fptr, LOG_INFO) != 0) {
         log_error("Failed to open or read logs file");
     }
+    log_add_callback(db_sqlite_log_callback, NULL, LOG_INFO);
 
     // Set up HTTP server
     log_info("Starting web server on %s", s_http_port);
