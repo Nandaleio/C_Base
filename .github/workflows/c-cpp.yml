@@ -20,7 +20,7 @@ jobs:
       run: make all
       
     - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
+      uses: actions/upload-artifact@v3
+      with:
           name: output-${{ matrix.os }}
           path: ./output
