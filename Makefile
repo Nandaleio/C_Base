@@ -31,12 +31,7 @@ else
   $(info Windows build...)
 endif
 
-# Run custom command before compilation
-pre-build:
-	npm run build --prefix ui
-	./pack.exe ui/dist/index.html ui/dist/index.css.gz ui/dist/index.js.gz ui/dist/favicon.ico
-
-all: pre-build $(TARGET)
+all:  $(TARGET)
 
 $(TARGET): $(SRCS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(TARGET) $(SRCS) $(LDFLAGS)

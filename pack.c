@@ -24,7 +24,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#define OUTPUT_FILE "fs.c"
+#define OUTPUT_FILE "src/fs.c"
 
 static const char *code =
     "static int scmp(const char *a, const char *b) {\n"
