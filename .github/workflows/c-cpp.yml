@@ -13,9 +13,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-    - name: npm i
-      run: npm install -prefix ui
     - name: make
       run: make all
   
@@ -25,8 +22,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-    - name: npm i
-      run: npm install -prefix ui
     - name: make
       run: make all
