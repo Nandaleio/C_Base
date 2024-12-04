@@ -2,3 +2,4 @@
 dist/*
 cb_*
 *.exe
+!pack.exe
