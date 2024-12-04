@@ -5,6 +5,6 @@
 #define JWT_DEFAULT_HEADER "{\"alg\":\"HS256\",\"typ\":\"JWT\"}"
 
 char *jwt_sign(const char *header, const char *payload, const char *secret);
-int jwt_verify(const char *jwt, const char *secret);
+int jwt_verify(const char *jwt, const char *secret, int is_admin);
 
 #endif

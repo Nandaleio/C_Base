@@ -3,20 +3,32 @@
 import router from '@/router';
 import { env } from '@/utils/env';
 import { ref } from 'vue'
+import { useToast } from 'vue-toastification';
 
   const username = ref('');
   const password = ref('');
 
+  const toast = useToast()
+
   async function login() {
-    const res = await fetch(`${env.apiURL}/api/auth/login`, {
+    const res = await fetch(`${env.apiURL}/api/admin/login`, {
       method: 'post',
       body: JSON.stringify({username: username.value, password: password.value})
     })
     if(res.ok) {
-      const {token} = await res.json();
-      localStorage.setItem(env.localStorageTokenKey, token);
+      const test = await res.json();
+
+      console.log(test);
+
+      if(test.error) {
+        toast.error(test.error);
+        return;
+      }
+
+      localStorage.setItem(env.localStorageTokenKey, test.token);
       router.push('/tables')
     }
+
   }
 
 </script>
@@ -42,6 +54,10 @@ import { ref } from 'vue'
 
   input{
     width: 20%;
+  }
+
+  .error {
+    color: var(--pico-form-element-invalid-active-border-color);
   }
 }
 </style>

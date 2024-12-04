@@ -11,7 +11,7 @@
 
     async function query() {
         loading.value = true;
-        const res = await cbFetch('/api/query', "POST", {query: sqlQuery.value});
+        const res = await cbFetch('/api/admin/query', "POST", {query: sqlQuery.value});
         cols.value = res.columns;
         data.value = res.data;
         error.value = res.error;

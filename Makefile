@@ -5,19 +5,22 @@ CC = gcc
 CFLAGS = -O2 -Wall -Wextra -DMG_ENABLE_PACKED_FS=1 -w -DLOG_USE_COLOR -g
 
 # Include Paths
-INCLUDES = -I./  # Ensure this points to mongoose.h and sqlite3.h if needed
+INCLUDES = -Iinclude  # Ensure this points to mongoose.h and sqlite3.h if needed
 
 # Source files
-SRCS = main.c ./libs/sqlite3.c ./libs/mongoose.c ./libs/log.c ./libs/parson.c fs.c ./modules/db.c ./modules/utils.c ./modules/jwt.c
+SRCS = ./src/main.c ./libs/sqlite3.c ./libs/mongoose.c ./libs/log.c ./libs/parson.c ./src/fs.c ./src/db.c ./src/utils.c ./src/jwt.c
 
 LDFLAGS :=
 TARGET :=
 
-ifeq ($(UNAME_S),Linux)
+PLATFORM := $(shell uname)
+$(info PLATFORM is $(PLATFORM))
+
+ifeq ($(PLATFORM),Linux)
   TCFLAGS += -D LINUX
   TARGET = C_Base
   $(info Linux build...)
-else ifeq ($(UNAME_S),Darwin)
+else ifeq ($(PLATFORM),Darwin)
   CFLAGS += -D OSX
   TARGET = C_Base
   $(info OSX build...)
@@ -28,8 +31,12 @@ else
   $(info Windows build...)
 endif
 
-# Build the application
-all: $(TARGET)
+# Run custom command before compilation
+pre-build:
+	npm run build --prefix ui
+	./pack.exe ui/dist/index.html ui/dist/index.css.gz ui/dist/index.js.gz ui/dist/favicon.ico
+
+all: pre-build $(TARGET)
 
 $(TARGET): $(SRCS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(TARGET) $(SRCS) $(LDFLAGS)

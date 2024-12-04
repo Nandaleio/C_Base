@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
-import TableView from '@/views/home/TableView.vue'
+import TablesView from '@/views/home/TablesView.vue'
 import { env } from '@/utils/env'
 import HomeView from '@/views/HomeView.vue'
 import EditorView from '@/views/home/EditorView.vue'
@@ -12,7 +12,7 @@ const router = createRouter({
   routes: [
     { path: '/login', name: 'login', component: LoginView},
     { path: '/', component: HomeView, children: [
-      { path: '/tables', component: TableView },
+      { path: '/tables', component: TablesView },
       { path: '/editor', component: EditorView },
       { path: '/logs', component: LogsView },
       { path: '/settings', component: SettingsView },

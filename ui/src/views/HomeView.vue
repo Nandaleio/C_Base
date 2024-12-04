@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import Nav from '@/components/Nav.vue'
+    import Nav from '@/components/Nav.vue';
 
     const list = [
         {icon: 'database', path: '/tables', tooltip: "tables"},
@@ -27,6 +27,7 @@
 
     .content{
         flex-grow: 1;
+        overflow: auto;
     }
 }
 

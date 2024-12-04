@@ -1,6 +1,8 @@
 <script setup lang="ts">
     import AddAdmin from '@/components/AddAdmin.vue';
-import { cbFetch } from '@/services/api-service';
+    import router from '@/router';
+    import { cbFetch } from '@/services/api-service';
+    import { env } from '@/utils/env';
     import { onMounted, ref, useTemplateRef } from 'vue';
 
     const loading = ref(false);
@@ -9,6 +11,11 @@ import { cbFetch } from '@/services/api-service';
 
     const cols = ref<string[]>([]);
     const data = ref<{ [key: string]: string }[]>([]);
+
+    function logout() {
+      localStorage.removeItem(env.localStorageTokenKey);
+      router.push("/login");
+    }
 
     async function queryAdmins() {
         loading.value = true;
@@ -25,6 +32,10 @@ import { cbFetch } from '@/services/api-service';
 
 <template>
     <div class="settings-container">
+        <button @click="logout" class="logout-btn" data-tooltip="Logout" data-placement="left">
+            <span class="material-symbols-outlined">logout</span>
+        </button>
+
         <hgroup>
             <h2>Settings</h2>
             <p>Configure your app and the admins</p>
@@ -54,6 +65,12 @@ import { cbFetch } from '@/services/api-service';
 </template>
 
 <style scoped>
+.logout-btn {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    display: flex;
+}
 .settings-container {
     padding: 1rem;
     display: flex;
