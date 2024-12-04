@@ -1,8 +1,8 @@
 
 
 #include <stdio.h>
-#include "jwt.h"
-#include "utils.h"
+#include "../includes/jwt.h"
+#include "../includes/utils.h"
 #include "../libs/mongoose.h"
 #include "../libs/log.h"
 
@@ -35,7 +35,7 @@ char *jwt_sign(const char *header, const char *payload, const char *secret) {
 }
 
 // Verify JWT using Mongoose HMAC
-int jwt_verify(const char *jwt, const char *secret) {
+int jwt_verify(const char *jwt, const char *secret, int is_admin) {
     char *base64_header = strtok(jwt, ".");
     char *base64_payload = strtok(NULL, ".");
     char *received_signature = strtok(NULL, ".");
@@ -48,6 +48,12 @@ int jwt_verify(const char *jwt, const char *secret) {
 
     char *expected_signature = base64url_encode(hmac, sizeof(hmac));
     int valid = strcmp(received_signature, expected_signature);
+
+    if(is_admin) {
+        char decoded_payload[strlen(base64_payload)];
+        mg_base64_decode(base64_payload, strlen(base64_payload), decoded_payload, strlen(base64_payload));
+        valid &= (strstr(decoded_payload, "ADMIN") != NULL);
+    }
 
     free(expected_signature);
     free(received_signature);

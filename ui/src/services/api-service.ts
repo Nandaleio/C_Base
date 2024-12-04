@@ -1,1 +1,14 @@
+import { env } from "@/utils/env"
 
+export async function cbFetch<T = any>(url: string, method:string = "GET", body?: any) {
+    const token = localStorage.getItem(env.localStorageTokenKey) 
+    const res = await fetch(`${env.apiURL}${url}`, {
+        method: method,
+        headers: {
+            Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(body)
+    })
+    if(!res.ok) throw new Error(res.statusText);
+    return await res.json() as T;
+}

@@ -2,6 +2,7 @@
 #define DB_H
 
 #include "../libs/sqlite3.h"
+#include "../libs/log.h"
 
 // SQLite db file location
 #define DB_PATH  "cb_data/data.db"
@@ -23,16 +24,20 @@ int db_init();
 int db_close();
 
 // UTILS
-char *db_sqlite_to_json(sqlite3_stmt *stmt);
 char *db_query(char *query);
+void db_sqlite_log_callback(log_Event *ev);
 
 //TABLES
 char *db_get_tables();
 char *db_get_table(char *table_name);
+char *db_get_logs();
 
 //AUTH
 char *db_add_user(char *username, char *password);
 char *db_login(char* username, char *password);
+
 char *db_admin_login(char *username, char *password);
+char *db_add_admin(char *username, char *password);
+char *db_get_admins();
 
 #endif

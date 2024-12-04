@@ -16,6 +16,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      '@logic': fileURLToPath(new URL('./src/logic', import.meta.url)),
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },

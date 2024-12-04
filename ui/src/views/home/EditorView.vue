@@ -1,7 +1,6 @@
 <script setup lang="ts">
-    import { env } from '@/utils/env';
+    import { cbFetch } from '@/services/api-service';
     import { ref } from 'vue';
-    import CircularLoader from '@/components/CircularLoader.vue';
 
     const sqlQuery = ref('');
 
@@ -12,20 +11,10 @@
 
     async function query() {
         loading.value = true;
-        const token = localStorage.getItem(env.localStorageTokenKey) 
-        const res = await fetch(`${env.apiURL}/api/query`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}` 
-            },
-            body: JSON.stringify({query: sqlQuery.value})
-        })
-        if(res.ok) {
-            const {columns, data, error} = await res.json();
-            cols.value = columns;
-            data.value = data;
-            error.value = error;
-        }
+        const res = await cbFetch('/api/admin/query', "POST", {query: sqlQuery.value});
+        cols.value = res.columns;
+        data.value = res.data;
+        error.value = res.error;
         loading.value = false;
     }
 </script>

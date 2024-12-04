@@ -9,7 +9,7 @@ A [Pocketbase](https://pocketbase.io/) alternative _(or copy)_ written in C and 
 - SQLite DB
 - Authentication
 - Embedded admin UI
-- Less than 5MB executable _(might exceed a bit in the future)_
+- Less than 5MB single executable _(might exceed a bit in the future)_
 
 ## How to use:
 
@@ -24,11 +24,11 @@ C_Base will create several folders :
 ## Roadmap :
 
 - [ ] Real time change through websocket
-- [ ] JS engine to add custom behavior _(probably gonna use [Duktape Engine](https://duktape.org/))_
+- [ ] JS engine to add custom behavior _(probably gonna use [QuickJS](https://bellard.org/quickjs/) or [Duktape Engine](https://duktape.org/))_
 
 ## TODO : 
 
-- [ ] JWT check: expiration date
+- [ ] JWT check: expiration date + roles
 - [ ] Prevent access to password and salt from user table
 - [ ] Add mongoose errors + input req + sqlite errors in the log table
 - [ ] Create table from Admin UI 

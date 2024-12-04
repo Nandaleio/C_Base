@@ -1,37 +1,41 @@
 <script setup lang="ts">
+    import { cbFetch } from '@/services/api-service';
+    import { onMounted, ref } from 'vue';
+
+    const loading = ref(false);
+    const data = ref<{created: Date, level: string, description: string}[]>([]);
+    
+    async function query() {
+        loading.value = true;
+        const res = await cbFetch('/api/admin/logs')
+        data.value = res.data;
+        loading.value = false;
+    }
+
+    onMounted(async () => {
+        await query();
+    })
 
 </script>
 
 <template>
-        <div class="content">
+        <div class="logs-container">
+            <div class="actions">
+                <button @click="query" :aria-busy="loading">Refresh</button>
+            </div>
             <table>
                 <thead>
                     <tr>
-                    <th>Name</th>
-                    <th>Home Runs</th>
-                    <th>AVG</th>
+                    <th>Created</th>
+                    <th>Level</th>
+                    <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                    <td>Mike Trout</td>
-                    <td>45</td>
-                    <td>.291</td>
-                    </tr>
-                    <tr>
-                    <td>Christian Yelich</td>
-                    <td>44</td>
-                    <td>.329</td>
-                    </tr>
-                    <tr>
-                    <td>Mookie Betts</td>
-                    <td>29</td>
-                    <td>.295</td>
-                    </tr>
-                    <tr>
-                    <td>Cody Bellinger</td>
-                    <td>47</td>
-                    <td>.305</td>
+                    <tr v-for="log of data">
+                        <td>{{ log.created }}</td>
+                        <td>{{ log.level }}</td>
+                        <td>{{ log.description }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -39,5 +43,7 @@
 </template>
 
 <style scoped>
-
+    .logs-container {
+        padding: 1rem;
+    }
 </style>
