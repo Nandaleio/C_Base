@@ -147,3 +147,40 @@ char *base64url_encode(const unsigned char *input, size_t length) {
     output[j] = '\0'; // Null-terminate the string
     return output;
 }
+
+char *base64url_decode(const char *input) {
+    size_t input_length = strlen(input);
+    if (input_length % 4 != 0 && input_length % 4 != 2 && input_length % 4 != 3) {
+        return NULL; // Invalid base64url string
+    }
+
+    size_t len = input_length;
+    size_t padding = 0;
+    if (len > 0) {
+        if (input[len-1] == '\0') padding++;
+        if (len > 1 && input[len-2] == '\0') padding++;
+    }
+
+    size_t output_length = (len * 3) / 4 - padding;
+    unsigned char *output = malloc(output_length);
+    if (!output) return NULL;
+
+    size_t i, j;
+    uint32_t sextet_a, sextet_b, sextet_c, sextet_d;
+    uint32_t triple;
+
+    for (i = 0, j = 0; i < len;) {
+        sextet_a = input[i] == '\0' ? 0 & i++ : strchr(base64url_chars, input[i++]) - base64url_chars;
+        sextet_b = input[i] == '\0' ? 0 & i++ : strchr(base64url_chars, input[i++]) - base64url_chars;
+        sextet_c = input[i] == '\0' ? 0 & i++ : strchr(base64url_chars, input[i++]) - base64url_chars;
+        sextet_d = input[i] == '\0' ? 0 & i++ : strchr(base64url_chars, input[i++]) - base64url_chars;
+
+        triple = (sextet_a << 18) + (sextet_b << 12) + (sextet_c << 6) + sextet_d;
+
+        if (j < output_length) output[j++] = (triple >> 16) & 0xFF;
+        if (j < output_length) output[j++] = (triple >> 8) & 0xFF;
+        if (j < output_length) output[j++] = triple & 0xFF;
+    }
+
+    return output;
+}

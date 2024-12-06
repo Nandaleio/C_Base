@@ -5,6 +5,7 @@
 #include "../includes/utils.h"
 #include "../libs/mongoose.h"
 #include "../libs/log.h"
+#include "../libs/parson.h"
 
 // Sign JWT using Mongoose HMAC
 char *jwt_sign(const char *header, const char *payload, const char *secret) {
@@ -30,7 +31,7 @@ char *jwt_sign(const char *header, const char *payload, const char *secret) {
 
     free(header_payload);
     free(signature);
-
+    
     return jwt;
 }
 
@@ -49,12 +50,23 @@ int jwt_verify(const char *jwt, const char *secret, int is_admin) {
     char *expected_signature = base64url_encode(hmac, sizeof(hmac));
     int valid = strcmp(received_signature, expected_signature);
 
+    if(valid) return JWT_WRONG_SIGNATURE;
+
+    char *decoded_payload = base64url_decode(base64_payload);
+    JSON_Value *json_payload = json_parse_string(decoded_payload);
+    JSON_Object *payload_object = json_value_get_object(json_payload);
+    double exp = json_object_get_number(payload_object, "exp");
+    long current_time = (unsigned long)time(NULL);
+    valid &= exp < current_time;
+
+    if(valid) return JWT_TOKEN_EXPIRED;
+
     if(is_admin) {
-        char decoded_payload[strlen(base64_payload)];
-        mg_base64_decode(base64_payload, strlen(base64_payload), decoded_payload, strlen(base64_payload));
-        valid &= (strstr(decoded_payload, "ADMIN") != NULL);
+        char *role = json_object_get_string(payload_object, "role");
+        valid &= strcmp(role, "ADMIN");
     }
 
+    json_value_free(json_payload);
     free(expected_signature);
     free(received_signature);
 

@@ -139,8 +139,8 @@ char *db_get_tables() {
 }
 
 char *db_get_table(char *table_name) {
-    char *query = "SELECT * FROM ";
-    strcat(query, table_name);
+    char query[256];
+    snprintf(query, strlen(query), "SELECT * FROM %s", table_name);
     char *json = db_query(query);
     return json;
 }
@@ -234,13 +234,15 @@ char *db_login(char *username, char *password) {
         return "{\"error\": \"wrong password\"}";
     }
 
+    unsigned long current_time = (unsigned long)time(NULL);
     JSON_Value *payload_value = json_value_init_object();
     JSON_Object *payload_object = json_value_get_object(payload_value);
-    char *serialized_string = NULL;
+    char *serialized_string = NULL;    
     json_object_set_string(payload_object, "sub", username);
     json_object_set_string(payload_object, "username", username);
     json_object_set_string(payload_object, "role", "USER");
-    json_object_set_number(payload_object, "iat", (unsigned long)time(NULL));
+    json_object_set_number(payload_object, "iat", current_time);
+    json_object_set_number(payload_object, "exp", (current_time+JWT_EXPIRATION_TIME));
     const char *payload = json_serialize_to_string_pretty(payload_value);
 
     char *jwt = jwt_sign(JWT_DEFAULT_HEADER, payload, JWT_SECRET_KEY);
@@ -282,12 +284,15 @@ char *db_admin_login(char *username, char *password) {
         return "{\"error\": \"wrong password for this admin\"}";
     }
 
+    unsigned long current_time = (unsigned long)time(NULL);
     JSON_Value *payload_value = json_value_init_object();
     JSON_Object *payload_object = json_value_get_object(payload_value);
     json_object_set_string(payload_object, "sub", username);
     json_object_set_string(payload_object, "role", "ADMIN");
     json_object_set_string(payload_object, "username", username);
-    json_object_set_number(payload_object, "iat", (unsigned long)time(NULL));
+    json_object_set_number(payload_object, "iat", current_time);
+    json_object_set_number(payload_object, "exp", current_time+JWT_EXPIRATION_TIME);
+
     const char *payload = json_serialize_to_string_pretty(payload_value);
 
     char *jwt = jwt_sign(JWT_DEFAULT_HEADER, payload, JWT_SECRET_KEY);

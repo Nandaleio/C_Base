@@ -1,4 +1,5 @@
 import { env } from "@/utils/env"
+import { useToast } from "vue-toastification";
 
 export async function cbFetch<T = any>(url: string, method:string = "GET", body?: any) {
     const token = localStorage.getItem(env.localStorageTokenKey) 
@@ -10,5 +11,10 @@ export async function cbFetch<T = any>(url: string, method:string = "GET", body?
         body: JSON.stringify(body)
     })
     if(!res.ok) throw new Error(res.statusText);
-    return await res.json() as T;
+    const ret = res.json() as T;
+    if((ret as any).error) {
+        const toast = useToast();
+        toast.error((ret as any).error);
+    }
+    return ret;
 }

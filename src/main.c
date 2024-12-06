@@ -37,8 +37,7 @@ void standard_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http
 // HTTP event handler
 static void ev_handler(struct mg_connection *c, int ev, void *ev_data)
 {
-    if (ev != MG_EV_HTTP_MSG)
-        return;
+    if (ev != MG_EV_HTTP_MSG) return;
 
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
 
@@ -237,6 +236,7 @@ void admin_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http_me
         free(json);
         return;
     }
+    
     // ADMIN CHECK GUARD
     char user[1], token[512];
     mg_http_creds(hm, user, sizeof(user), token, sizeof(token));
@@ -312,10 +312,10 @@ void standard_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http
         return mg_http_reply(c, 401, MG_API_HEADERS, "Unauthorized");
     }
 
-    struct mg_str caps[2];
+    struct mg_str caps[3];
     if (mg_match(hm->uri, mg_str("*/table/*"), caps))
     {
-        char *json = db_get_table(caps[0].buf);
+        char *json = db_get_table(caps[1].buf);
         mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
         json_free_serialized_string(json);
         return;
