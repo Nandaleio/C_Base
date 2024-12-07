@@ -1,8 +1,18 @@
 <script setup lang="ts">
+
+import {
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input';
+
     import { cbFetch } from '@/services/api-service';
-    import { ref, useTemplateRef } from 'vue';
-
-
+    import { ref } from 'vue';
 
     const username = ref('');
     const password = ref('');
@@ -29,29 +39,33 @@
         
     }
   
-    const dialog = useTemplateRef('dialog')
-
-    const open = () => {if(dialog.value) dialog.value.open = true;}
-    const close = () => {if(dialog.value) {error.value=""; dialog.value.open = false;}}
-    defineExpose({open, close});
+    const close = () => {error.value="";}
 </script>
 
 <template>
-    <dialog ref="dialog">
-        <article>
-            <header>
-                <h2>Add new Admin</h2>
-            </header>
-            <input type="text" v-model="username" placeholder="Username">
-            <input type="password" v-model="password" placeholder="Password">
-            <input type="password" v-model="confirmPassword" placeholder="Confirm Password">
-            <pre v-if="error" class="error">{{ error }}</pre>
-            <footer>
-                <button class="secondary" @click="close">Cancel</button>
-                <button @click="addAdmin">Confirm</button>
-            </footer>
-        </article>
-    </dialog>
+
+<DialogContent>
+        <DialogHeader>
+            <DialogTitle>Add new Admin</DialogTitle>
+            <DialogDescription>
+                Every admin created will automatically have access to the admin UI
+            </DialogDescription>
+        </DialogHeader>
+
+        <Input type="text" v-model="username" placeholder="Username"/>
+        <Input type="password" v-model="password" placeholder="Password"/>
+        <Input type="password" v-model="confirmPassword" placeholder="Confirm Password"/>
+        <pre v-if="error" class="error">{{ error }}</pre>
+
+        <DialogFooter>
+            <DialogClose as-child>
+                <Button @click="close" type="button" variant="secondary">
+                    Cancel
+                </Button>
+            </DialogClose>
+            <Button @click="addAdmin">Confirm</Button>
+        </DialogFooter>
+    </DialogContent>
 </template>
 
 <style scoped>

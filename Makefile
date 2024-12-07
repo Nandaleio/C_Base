@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler Flags
-CFLAGS = -O2 -Wall -Wextra -DMG_ENABLE_PACKED_FS=1 -w -DLOG_USE_COLOR -g
+CFLAGS = -Wall -Wextra -DMG_ENABLE_PACKED_FS=1 -w -DLOG_USE_COLOR
 
 # Include Paths
 INCLUDES = -Iinclude  # Ensure this points to mongoose.h and sqlite3.h if needed
@@ -14,7 +14,6 @@ LDFLAGS :=
 TARGET :=
 
 PLATFORM := $(shell uname)
-$(info PLATFORM is $(PLATFORM))
 
 ifeq ($(PLATFORM),Linux)
   TCFLAGS += -D LINUX
@@ -35,6 +34,10 @@ all:  $(TARGET)
 
 $(TARGET): $(SRCS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(TARGET) $(SRCS) $(LDFLAGS)
+
+
+debug:
+	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) -o $(TARGET) $(SRCS) $(LDFLAGS)
 
 # Clean up build files
 clean:
