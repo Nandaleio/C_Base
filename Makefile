@@ -11,22 +11,19 @@ INCLUDES = -Iinclude  # Ensure this points to mongoose.h and sqlite3.h if needed
 SRCS = ./src/main.c ./libs/sqlite3.c ./libs/mongoose.c ./libs/log.c ./libs/parson.c ./src/fs.c ./src/db.c ./src/utils.c ./src/jwt.c
 
 LDFLAGS :=
-TARGET :=
+TARGET = C_Base
 
 PLATFORM := $(shell uname)
 
 ifeq ($(PLATFORM),Linux)
   TCFLAGS += -D LINUX
-  TARGET = C_Base
   $(info Linux build...)
 else ifeq ($(PLATFORM),Darwin)
   CFLAGS += -D OSX
-  TARGET = C_Base
   $(info OSX build...)
 else
   CFLAGS += -D Windows
   LDFLAGS = -lws2_32  # Linker Flags for Windows (add ws2_32 for networking support)
-  TARGET = C_Base.exe
   $(info Windows build...)
 endif
 
