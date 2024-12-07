@@ -1,4 +1,15 @@
 <script setup lang="ts">
+    import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+    } from '@/components/ui/table'
+    import { Button } from '@/components/ui/button'
+    import { Textarea } from '@/components/ui/textarea'
+
     import { cbFetch } from '@/services/api-service';
     import { ref } from 'vue';
 
@@ -21,27 +32,27 @@
 
 <template>
     <div class="main-container">
-        <textarea v-model="sqlQuery" name="sqlQuery"></textarea>
+        <Textarea v-model="sqlQuery" name="sqlQuery"></Textarea>
         <div class="actions">
-            <button class="primary" @click="query">run</button>
+            <Button @click="query">run</Button>
         </div>
         <div class="content" :aria-busy="loading">
-            <table v-if="cols && cols.length">
-                <thead>
-                    <tr>
-                    <th v-for="col of cols">
-                        {{ col }}
-                    </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="d of data">
-                        <td v-for="col of cols">
-                            {{ d[col] }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <Table v-if="cols && cols.length">
+                <TableHeader>
+                <TableRow>
+                    <TableHead v-for="col of cols">
+                    {{col}}
+                    </TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                <TableRow v-for="d of data">
+                    <TableCell v-for="col of cols">
+                    {{ d[col] }}
+                    </TableCell>
+                </TableRow>
+                </TableBody>
+            </Table>
             <pre v-else-if="error" class="error">{{ error }}</pre>
         </div>
     </div>
@@ -52,7 +63,6 @@
 .main-container{
     display: flex;
     flex-direction: column;
-    padding: 1rem;
     gap: 1rem;
     
     .actions{
@@ -65,10 +75,6 @@
         align-items: flex-start;
         justify-content: center;
         height: 100%;
-
-        table {
-            width: 100%;
-        }
 
         .error{
             color: red;

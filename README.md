@@ -28,8 +28,7 @@ C_Base will create several folders :
 
 ## TODO : 
 
-- [ ] JWT check: expiration date + roles
 - [ ] Prevent access to password and salt from user table
-- [ ] Add mongoose errors + input req + sqlite errors in the log table
 - [ ] Create table from Admin UI 
+- [ ] Where clause from API
 - [ ] API Rules

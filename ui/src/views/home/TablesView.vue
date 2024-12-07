@@ -1,5 +1,12 @@
 <script setup lang="ts">
-    import { onMounted, ref, useTemplateRef } from 'vue';
+    
+    import {
+    Dialog,
+    DialogTrigger,
+    } from '@/components/ui/dialog'
+    
+import { Plus, Users, Folder } from 'lucide-vue-next'
+    import { onMounted, ref } from 'vue';
     import CreateTable from "@/components/CreateTable.vue";
     import { cbFetch } from "@/services/api-service";
 
@@ -9,8 +16,6 @@
     const error = ref<any>(undefined);
     const cols = ref<string[]>([]);
     const data = ref<{ [key: string]: string }[]>([]);
-
-    const createTableOpen = useTemplateRef('create-table');
 
     async function queryTable(table: string) {
         const res = await cbFetch(`/api/table/${table}`)
@@ -30,18 +35,18 @@
     <div class="main-container">
         <div class="list-table">
             <span class="item-table" v-for="table of list.filter((t:string) => t.includes(search))" @click="queryTable(table)">
-                <span class="material-symbols-outlined">
-                    {{ table == "user" ? 'group' : 'folder' }}
-                </span>
+                <Users v-if="table == 'user'" />
+                <Folder v-else/>
                 {{ table }}
             </span>
 
-            <button class="small outline" @click="createTableOpen!.open()" data-tooltip="Create a new table"
-                data-placement="right">
-                <span class="material-symbols-outlined">
-                    add
-                </span>
-            </button>
+            <Dialog>
+                <DialogTrigger>
+                    <Plus />
+                </DialogTrigger>
+                <CreateTable ref="create-table"></CreateTable>
+            </Dialog>
+
         </div>
 
         <div class="content">
@@ -64,7 +69,6 @@
                 </table>
             </template>
             <pre v-else-if="error" class="error">{{ error }}</pre>
-            <CreateTable ref="create-table"></CreateTable>
         </div>
         
     </div>

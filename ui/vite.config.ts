@@ -6,6 +6,9 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import viteCompression from 'vite-plugin-compression';
 
+import autoprefixer from 'autoprefixer'
+import tailwind from 'tailwindcss'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -29,5 +32,10 @@ export default defineConfig({
         assetFileNames: `[name].[ext]`
       }
     }
-  }
+  },
+  css: {
+    postcss: {
+      plugins: [tailwind(), autoprefixer()],
+    },
+  },
 })
