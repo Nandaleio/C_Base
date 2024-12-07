@@ -22,5 +22,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-          name: output-${{ matrix.os }}
-          path: ./output
+          name: C_Base-${{ matrix.os }}
+          path: ./

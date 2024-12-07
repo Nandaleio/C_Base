@@ -1,11 +1,3 @@
-#define _GNU_SOURCE
-#define _LARGEFILE_SOURCE
-#define _FILE_OFFSET_BITS 64
-
-#ifdef _WIN32
-#define fseeko _fseeki64
-#define ftello _ftelli64
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
