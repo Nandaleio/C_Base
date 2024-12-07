@@ -353,6 +353,29 @@ char *db_add_admin(char *username, char *password) {
     return "{\"error\": \"\"}";
 }
 
+char *db_delete_admin(char *username) {
+    log_info("Deleting admin: %s", username);
+    char* query = "DELETE FROM " ADMIN_TABLE " WHERE condition id = ?";
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
+        return "{\"error\": \"Failed to prepare statement\"}";
+    }
+    if (sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC) != SQLITE_OK) {
+        log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
+        return "{\"error\": \"Failed to bind username parameter\"}";
+    }
+    if(sqlite3_step(stmt) != SQLITE_DONE) {
+        log_error("Failed to insert user: %s", sqlite3_errmsg(db));
+        return "{\"error\": \"Failed to insert user\"}";
+	}
+	if(sqlite3_finalize(stmt) != SQLITE_OK){
+        log_error("Failed finalize statement: %s", sqlite3_errmsg(db));
+        return "{\"error\": \"Failed finalize statement:\"}";
+    }
+    return "{\"error\": \"\"}";
+}
+
 void db_sqlite_log_callback(log_Event *ev) {
     const char *sql = "INSERT INTO " LOG_TABLE " (level, description) VALUES (?, ?);";
     sqlite3_stmt *stmt;

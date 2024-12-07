@@ -38,6 +38,7 @@ char *db_login(char* username, char *password);
 
 char *db_admin_login(char *username, char *password);
 char *db_add_admin(char *username, char *password);
+char *db_delete_admin(char *username);
 char *db_get_admins();
 
 #endif
