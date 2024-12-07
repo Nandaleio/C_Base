@@ -233,7 +233,7 @@ void admin_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http_me
         char *password = mg_json_get_str(hm->body, "$.password");
         char *json = db_admin_login(username, password);
         mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        free(json);
+        json_free_serialized_string(json);
         return;
     }
     
@@ -336,6 +336,12 @@ void standard_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http
         char *json = db_get_tables();
         mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
         json_free_serialized_string(json);
+        return;
+    }
+
+    if (mg_match(hm->uri, mg_str("*/version"), NULL))
+    {
+        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", "{\"version\": \""CBASE_VERSION"\"}");
         return;
     }
 

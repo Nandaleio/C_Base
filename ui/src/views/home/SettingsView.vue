@@ -1,21 +1,29 @@
 <script setup lang="ts">
+
+    import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+    } from '@/components/ui/table'
+    import {
+    Dialog,
+    DialogTrigger,
+    } from '@/components/ui/dialog'
+    import { Button } from '@/components/ui/button';
+
     import AddAdmin from '@/components/AddAdmin.vue';
-    import router from '@/router';
     import { cbFetch } from '@/services/api-service';
-    import { env } from '@/utils/env';
     import { onMounted, ref, useTemplateRef } from 'vue';
 
     const loading = ref(false);
-    const createAdminOpen = useTemplateRef('create-admin');
 
 
     const cols = ref<string[]>([]);
     const data = ref<{ [key: string]: string }[]>([]);
 
-    function logout() {
-      localStorage.removeItem(env.localStorageTokenKey);
-      router.push("/login");
-    }
 
     async function queryAdmins() {
         loading.value = true;
@@ -32,35 +40,39 @@
 
 <template>
     <div class="settings-container">
-        <button @click="logout" class="logout-btn" data-tooltip="Logout" data-placement="left">
-            <span class="material-symbols-outlined">logout</span>
-        </button>
-
-        <hgroup>
-            <h2>Settings</h2>
-            <p>Configure your app and the admins</p>
-        </hgroup>
+        <h2 class="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+            Settings
+        </h2>
+        <p class="leading-7 [&:not(:first-child)]:mb-6">Configure your app and the admins</p>
 
         <div class="actions">
-            <button class="primary" @click="createAdminOpen?.open()">Add a new Admin</button>
-            <AddAdmin ref="create-admin"></AddAdmin>
+            <Dialog>
+                <DialogTrigger>
+                    <Button>
+                        Add new Admin
+                    </Button>
+                </DialogTrigger>
+                <AddAdmin ref="create-admin"></AddAdmin>
+            </Dialog>
         </div>
-        <table v-if="cols && cols.length">
-                <thead>
-                    <tr>
-                    <th v-for="col of cols">
-                        {{ col }}
-                    </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="d of data">
-                        <td v-for="col of cols">
-                            {{ d[col] }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+
+
+        <Table v-if="cols && cols.length">
+                <TableHeader>
+                <TableRow>
+                    <TableHead v-for="col of cols">
+                    {{col}}
+                    </TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                <TableRow v-for="d of data">
+                    <TableCell v-for="col of cols">
+                    {{ d[col] }}
+                    </TableCell>
+                </TableRow>
+                </TableBody>
+            </Table>
     </div>
 </template>
 

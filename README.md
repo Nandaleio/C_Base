@@ -24,10 +24,11 @@ C_Base will create several folders :
 ## Roadmap :
 
 - [ ] Real time change through websocket
-- [ ] JS engine to add custom behavior _(probably gonna use [QuickJS](https://bellard.org/quickjs/) or [Duktape Engine](https://duktape.org/))
+- [ ] JS engine to add custom behavior _(probably gonna use [QuickJS](https://bellard.org/quickjs/) or [Duktape Engine](https://duktape.org/))_
 
 ## TODO : 
 
 - [ ] Prevent access to password and salt from user table
 - [ ] Create table from Admin UI 
+- [ ] Where clause from API
 - [ ] API Rules

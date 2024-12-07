@@ -27,6 +27,8 @@ int db_init() {
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
         "username TEXT UNIQUE NOT NULL, "
+        "email TEXT, "
+        "avatar BLOB, "
         "password TEXT NOT NULL, "
         "salt TEXT NOT NULL)";
 
@@ -152,7 +154,7 @@ char *db_get_logs() {
 }
 
 char *db_get_admins() {
-    char *query = "SELECT id, username, created FROM " ADMIN_TABLE;
+    char *query = "SELECT id, username, email, avatar, created FROM " ADMIN_TABLE ;
     char *json = db_query(query);
     return json;
 }
@@ -258,7 +260,7 @@ char *db_login(char *username, char *password) {
 char *db_admin_login(char *username, char *password) {
     
     log_trace("Admin %s logging in", username);
-    char *query = "select password, salt from " ADMIN_TABLE " where username = ?";
+    char *query = "select password, salt, email from " ADMIN_TABLE " where username = ?";
     
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
@@ -278,6 +280,8 @@ char *db_admin_login(char *username, char *password) {
 
     char* hashed_password = sqlite3_column_text(stmt, 0);
     char* salt = sqlite3_column_text(stmt, 1);
+
+    char* email = sqlite3_column_text(stmt, 2);
 
     if(check_password(hashed_password, password, salt) != 0) {
         log_error("The passwords doesn't match");
@@ -299,9 +303,14 @@ char *db_admin_login(char *username, char *password) {
     
     json_free_serialized_string(payload);
     json_value_free(payload_value);
-    
-    char *json = malloc(strlen(jwt) + 20);
-    sprintf(json, "{\"token\": \"%s\"}", jwt);
+
+    JSON_Value *json_value = json_value_init_object();
+    JSON_Object *json_object = json_value_get_object(json_value);
+    json_object_set_string(json_object, "token", jwt);
+    json_object_set_string(json_object, "username", username);
+    json_object_set_string(json_object, "email", email);
+    const char *json = json_serialize_to_string_pretty(json_value);
+    json_value_free(json_value);
     return json;
 }
 
@@ -385,10 +394,12 @@ void db_sqlite_log_callback(log_Event *ev) {
         fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return;
     }
-
+    int size = vsnprintf(NULL, 0, ev->fmt, ev->ap);
+    char *final_message = (char*)malloc(size + 1);
+    vsnprintf(final_message, size + 1, ev->fmt, ev->ap);
     // Bind log event parameters to the SQL statement
     sqlite3_bind_text(stmt, 1, log_level_string(ev->level), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, ev->fmt, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, final_message, -1, SQLITE_STATIC);
 
     // Execute the SQL statement
     if (sqlite3_step(stmt) != SQLITE_DONE) {
@@ -397,4 +408,5 @@ void db_sqlite_log_callback(log_Event *ev) {
 
     // Finalize the statement
     sqlite3_finalize(stmt);
+    free(final_message);
 }

@@ -1,4 +1,15 @@
 <script setup lang="ts">
+
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+    } from '@/components/ui/table'
+    import { Button } from '@/components/ui/button'
+
     import { cbFetch } from '@/services/api-service';
     import { onMounted, ref } from 'vue';
 
@@ -21,29 +32,26 @@
 <template>
         <div class="logs-container">
             <div class="actions">
-                <button @click="query" :aria-busy="loading">Refresh</button>
+                <Button @click="query" :aria-busy="loading">Refresh</Button>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                    <th>Created</th>
-                    <th>Level</th>
-                    <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="log of data">
-                        <td>{{ log.created }}</td>
-                        <td>{{ log.level }}</td>
-                        <td>{{ log.description }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Description</TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                <TableRow v-for="d of data">
+                    <TableCell>{{d.created}}</TableCell>
+                    <TableCell>{{d.level}}</TableCell>
+                    <TableCell>{{d.description}}</TableCell>
+                </TableRow>
+                </TableBody>
+            </Table>
         </div>
 </template>
 
 <style scoped>
-    .logs-container {
-        padding: 1rem;
-    }
 </style>
