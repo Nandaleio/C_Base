@@ -35,6 +35,7 @@ import { userStore } from '@/stores/user-store';
         userStore.email = loginInfo.email;
         userStore.username = loginInfo.username;
         userStore.avatar = loginInfo.avatar ?? 'https://avatar.iran.liara.run/public';
+        userStore.saveLocal();
         router.push('/tables')
       }
     }

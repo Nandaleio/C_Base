@@ -25,7 +25,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
-  SidebarTrigger,
+  SidebarGroupLabel,
   SidebarGroup,
   SidebarGroupContent
 } from '@/components/ui/sidebar'
@@ -54,12 +54,17 @@ const list = [
 
 function logout() {
       localStorage.removeItem(env.localStorageTokenKey);
+      localStorage.removeItem(env.localStorageUserKey);
       router.push("/login");
 }
 
 onMounted(async () => {
     const res = await cbFetch<{version:string}>('/api/version');
     appStore.version =  res.version; 
+
+    if(!userStore.username) {
+      userStore.getLocal();
+    }
 })
 
 </script>
@@ -90,9 +95,11 @@ onMounted(async () => {
       </SidebarHeader>
 
       <SidebarContent>
+
+
         <SidebarGroup>
           <SidebarGroupContent>
-            
+            <SidebarGroupLabel>Application</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem v-for="item in list" :key="item.title">
                 <SidebarMenuButton as-child>
@@ -154,7 +161,7 @@ onMounted(async () => {
       <header class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
         <NavBreadCrumb/>
       </header>
-      <div class="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <div class="flex flex-1 flex-col gap-4 pt-0">
         <RouterView/>
       </div>
     </SidebarInset>

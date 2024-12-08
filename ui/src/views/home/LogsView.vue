@@ -9,7 +9,7 @@ import {
     TableRow,
     } from '@/components/ui/table'
     import { Button } from '@/components/ui/button'
-
+    import { ScrollArea } from "@/components/ui/scroll-area"
     import { cbFetch } from '@/services/api-service';
     import { onMounted, ref } from 'vue';
 
@@ -30,7 +30,7 @@ import {
 </script>
 
 <template>
-        <div class="logs-container">
+        <div class="logs-container p-4">
             <div class="actions">
                 <Button @click="query" :aria-busy="loading">Refresh</Button>
             </div>
@@ -43,15 +43,12 @@ import {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                <TableRow v-for="d of data">
-                    <TableCell>{{d.created}}</TableCell>
-                    <TableCell>{{d.level}}</TableCell>
-                    <TableCell>{{d.description}}</TableCell>
-                </TableRow>
+                    <TableRow v-for="d of data">
+                        <TableCell>{{d.created}}</TableCell>
+                        <TableCell>{{d.level}}</TableCell>
+                        <TableCell>{{d.description}}</TableCell>
+                    </TableRow>
                 </TableBody>
             </Table>
         </div>
 </template>
-
-<style scoped>
-</style>

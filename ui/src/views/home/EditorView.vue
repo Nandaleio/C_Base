@@ -31,7 +31,7 @@
 </script>
 
 <template>
-    <div class="main-container">
+    <div class="main-container p-4">
         <Textarea v-model="sqlQuery" name="sqlQuery"></Textarea>
         <div class="actions">
             <Button @click="query">run</Button>
