@@ -42,8 +42,8 @@ int db_init() {
     }
 
     // -- ADD DEFAULT ADMIN --
-    sql = "INSERT INTO " ADMIN_TABLE "(username, password, salt)"
-        "SELECT 'admin', ?, ?"
+    sql = "INSERT INTO " ADMIN_TABLE "(username, password, salt, email)"
+        "SELECT 'admin', ?, ?, 'admin@C_Base.com'"
         "WHERE NOT EXISTS (SELECT 1 FROM "ADMIN_TABLE")";
 
     char salt[SALT_LENGTH+1];

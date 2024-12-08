@@ -49,7 +49,7 @@
         <div class="actions">
             <Dialog>
                 <DialogTrigger>
-                    <Button>
+                    <Button variant="outline">
                         Add new Admin
                     </Button>
                 </DialogTrigger>
@@ -74,7 +74,7 @@
                     <TableCell v-for="col of cols">
                     {{ d[col] }}
                     </TableCell>
-                    <TableCell class="flex gap-1.5 justify-end">
+                    <TableCell class="flex gap-1.5 justify-center">
                         <Button variant="secondary">
                             <Pencil />
                         </Button>

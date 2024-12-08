@@ -36,6 +36,10 @@ $(TARGET): $(SRCS)
 debug:
 	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) -o $(TARGET) $(SRCS) $(LDFLAGS)
 
+front:
+	npm run build --prefix ui
+	./pack.exe ui/dist/index.html ui/dist/index.css.gz ui/dist/index.js.gz ui/dist/favicon.ico
+  
 # Clean up build files
 clean:
 	rm -f $(TARGET)

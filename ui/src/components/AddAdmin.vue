@@ -77,7 +77,6 @@ import { Input } from '@/components/ui/input';
 </template>
 
 <style scoped>
-
 .error{
     color: var(--pico-form-element-invalid-active-border-color)
 }

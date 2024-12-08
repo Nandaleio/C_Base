@@ -14,14 +14,24 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 import { Plus, Users, Folder, Play, Settings } from 'lucide-vue-next'
+import  InsertRow from "@/components/InsertRow.vue"
 import { onMounted, ref } from 'vue';
 import CreateTable from "@/components/CreateTable.vue";
 import { cbFetch } from "@/services/api-service";
 
 const list = ref<string[]>([]);
 const search = ref<string>("");
+
+
+const currentTable = ref<string>("user");
 
 const error = ref<any>(undefined);
 const cols = ref<string[]>([]);
@@ -53,31 +63,73 @@ onMounted(async () => {
 
             <Dialog>
                 <DialogTrigger>
-                    <Plus />
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Plus />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Create a new table</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </DialogTrigger>
-                <CreateTable ref="create-table"></CreateTable>
+                <CreateTable></CreateTable>
             </Dialog>
+
+
 
         </div>
 
         <div class="flex gap-4 flex-col pt-0 p-4 w-full">
 
+            <template v-if="cols && cols.length > 0">
                 <div class="flex w-full items-center gap-1.5">
-                    <Button>
-                        <Settings />
-                    </Button>
 
-                    <Button>
-                        <Plus />
-                    </Button>
+                    <Dialog>
+                        <DialogTrigger>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Button variant="outline">
+                                    <Settings />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Edit table</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </DialogTrigger>
+            </Dialog>
+
+
+            <Dialog>
+                        <DialogTrigger>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Button variant="outline">
+                                    <Plus />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Insert a row</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </DialogTrigger>
+                <InsertRow :table-name="currentTable" :cols="cols"></InsertRow>
+            </Dialog>
+
 
                     <Input type="text" placeholder="Where clause" />
-                    <Button>
+                    <Button variant="outline">
                         <Play />
                     </Button>
                 </div>
 
-                <Table v-if="cols && cols.length > 0">
+                <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead v-for="col of cols">
@@ -93,6 +145,7 @@ onMounted(async () => {
                         </TableRow>
                     </TableBody>
                 </Table>
+            </template>
             <pre v-else-if="error" class="error">{{ error }}</pre>
         </div>
 

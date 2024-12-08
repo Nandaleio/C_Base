@@ -54,7 +54,7 @@ const column = ref<{name:string, type:string}[]>([]);
             </Button>
         </div>
 
-        <Button variant="secondary" @click="column.push({name:'', type:''})">Add Column</Button>
+        <Button variant="outline" @click="column.push({name:'', type:''})">Add Column</Button>
 
         <DialogFooter>
             <Button @click="">

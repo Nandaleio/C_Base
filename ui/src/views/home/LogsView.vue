@@ -32,7 +32,7 @@ import {
 <template>
         <div class="logs-container p-4">
             <div class="actions">
-                <Button @click="query" :aria-busy="loading">Refresh</Button>
+                <Button variant="outline" @click="query" :aria-busy="loading">Refresh</Button>
             </div>
             <Table>
                 <TableHeader>
