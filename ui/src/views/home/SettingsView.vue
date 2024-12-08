@@ -13,6 +13,7 @@
     DialogTrigger,
     } from '@/components/ui/dialog'
     import { Button } from '@/components/ui/button';
+    import { Pencil, Trash2 } from 'lucide-vue-next'
 
     import AddAdmin from '@/components/AddAdmin.vue';
     import { cbFetch } from '@/services/api-service';
@@ -39,7 +40,7 @@
 </script>
 
 <template>
-    <div class="settings-container">
+    <div class="settings-container p-4">
         <h2 class="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
             Settings
         </h2>
@@ -48,7 +49,7 @@
         <div class="actions">
             <Dialog>
                 <DialogTrigger>
-                    <Button>
+                    <Button variant="outline">
                         Add new Admin
                     </Button>
                 </DialogTrigger>
@@ -63,12 +64,23 @@
                     <TableHead v-for="col of cols">
                     {{col}}
                     </TableHead>
+                    <TableHead>
+                        Actions
+                    </TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                 <TableRow v-for="d of data">
                     <TableCell v-for="col of cols">
                     {{ d[col] }}
+                    </TableCell>
+                    <TableCell class="flex gap-1.5 justify-center">
+                        <Button variant="secondary">
+                            <Pencil />
+                        </Button>
+                        <Button variant="secondary">
+                            <Trash2 />
+                        </Button>
                     </TableCell>
                 </TableRow>
                 </TableBody>

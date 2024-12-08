@@ -42,8 +42,8 @@ int db_init() {
     }
 
     // -- ADD DEFAULT ADMIN --
-    sql = "INSERT INTO " ADMIN_TABLE "(username, password, salt)"
-        "SELECT 'admin', ?, ?"
+    sql = "INSERT INTO " ADMIN_TABLE "(username, password, salt, email)"
+        "SELECT 'admin', ?, ?, 'admin@C_Base.com'"
         "WHERE NOT EXISTS (SELECT 1 FROM "ADMIN_TABLE")";
 
     char salt[SALT_LENGTH+1];
@@ -113,7 +113,7 @@ int db_close() {
 
 char *db_query(char* query) {
 
-    log_debug("received query : %s \r", query);
+    log_debug("received query : %s", query);
 
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
@@ -141,9 +141,10 @@ char *db_get_tables() {
 }
 
 char *db_get_table(char *table_name) {
-    char query[256];
+    char *query = malloc(16 + sizeof(table_name));
     snprintf(query, strlen(query), "SELECT * FROM %s", table_name);
     char *json = db_query(query);
+    free(query);
     return json;
 }
 

@@ -17,6 +17,9 @@ import { Input } from '@/components/ui/input';
     const username = ref('');
     const password = ref('');
     const confirmPassword = ref('');
+    
+    const email = ref('');
+    const avatar = ref('');
 
     const error = ref('');
 
@@ -33,7 +36,8 @@ import { Input } from '@/components/ui/input';
 
         const res = await cbFetch("/api/admin/register", "POST", {
             username: username.value,
-            password: password.value
+            password: password.value,
+            email: email.value,
         });
         if(res) close();
         
@@ -52,9 +56,13 @@ import { Input } from '@/components/ui/input';
             </DialogDescription>
         </DialogHeader>
 
+        <Input type="file" v-model="avatar" placeholder="avatar"/>
         <Input type="text" v-model="username" placeholder="Username"/>
+        <Input type="email" v-model="email" placeholder="Email"/>
         <Input type="password" v-model="password" placeholder="Password"/>
         <Input type="password" v-model="confirmPassword" placeholder="Confirm Password"/>
+
+        
         <pre v-if="error" class="error">{{ error }}</pre>
 
         <DialogFooter>
@@ -69,7 +77,6 @@ import { Input } from '@/components/ui/input';
 </template>
 
 <style scoped>
-
 .error{
     color: var(--pico-form-element-invalid-active-border-color)
 }

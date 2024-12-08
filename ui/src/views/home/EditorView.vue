@@ -31,10 +31,10 @@
 </script>
 
 <template>
-    <div class="main-container">
+    <div class="main-container p-4">
         <Textarea v-model="sqlQuery" name="sqlQuery"></Textarea>
         <div class="actions">
-            <Button @click="query">run</Button>
+            <Button variant="outline" @click="query">run</Button>
         </div>
         <div class="content" :aria-busy="loading">
             <Table v-if="cols && cols.length">
