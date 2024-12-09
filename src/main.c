@@ -317,7 +317,8 @@ void standard_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http
     if (mg_match(hm->uri, mg_str("*/table/*"), caps))
     {
         char *table_name = strtok(caps[1].buf, " ");
-        char *json = db_get_table(table_name);
+        char *where_clause = mg_http_var(hm->query, mg_str("where")).buf;
+        char *json = db_get_table(table_name, where_clause);
         mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
         json_free_serialized_string(json);
         return;

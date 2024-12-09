@@ -29,7 +29,7 @@ void db_sqlite_log_callback(log_Event *ev);
 
 //TABLES
 char *db_get_tables();
-char *db_get_table(char *table_name);
+char *db_get_table(char *table_name, char* where_clause);
 char *db_get_logs();
 
 //AUTH

@@ -76,11 +76,12 @@ int db_init() {
     free(admin_pass); 
     // -- END ADD DEFAULT ADMIN --
 
-
     sql = "CREATE TABLE IF NOT EXISTS " USER_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
         "username TEXT UNIQUE NOT NULL, "
+        "email TEXT, "
+        "avatar BLOB, "
         "password TEXT NOT NULL, "
         "salt TEXT NOT NULL)";
     retval = sqlite3_exec(db, sql, 0, 0, &errMsg);
@@ -140,11 +141,14 @@ char *db_get_tables() {
     return json;
 }
 
-char *db_get_table(char *table_name) {
-    char *query = malloc(16 + sizeof(table_name));
-    snprintf(query, strlen(query), "SELECT * FROM %s", table_name);
+char *db_get_table(char *table_name, char* where_clause) {
+    size_t query_size = 16 + sizeof(table_name);
+    if(where_clause != NULL) query_size += strlen(where_clause);
+    char query[query_size];
+    strcpy(query, "SELECT * FROM ");
+    strcat(query, table_name);
+    if(where_clause != NULL) strcat(query, where_clause);
     char *json = db_query(query);
-    free(query);
     return json;
 }
 

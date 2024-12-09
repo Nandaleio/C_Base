@@ -34,7 +34,7 @@ import { Input } from '@/components/ui/input';
         <DialogHeader>
             <DialogTitle>Insert a new row into {{ tableName }}</DialogTitle>
             <DialogDescription>
-                Every admin created will automatically have access to the admin UI
+                
             </DialogDescription>
         </DialogHeader>
 

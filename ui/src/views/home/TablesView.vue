@@ -23,25 +23,32 @@ import {
 
 import { Plus, Users, Folder, Play, Settings } from 'lucide-vue-next'
 import  InsertRow from "@/components/InsertRow.vue"
+import EditTable from '@/components/EditTable.vue'
 import { onMounted, ref } from 'vue';
 import CreateTable from "@/components/CreateTable.vue";
 import { cbFetch } from "@/services/api-service";
+import router from '@/router';
 
 const list = ref<string[]>([]);
 const search = ref<string>("");
 
 
+const whereClause = ref<string>();
 const currentTable = ref<string>("user");
 
 const error = ref<any>(undefined);
 const cols = ref<string[]>([]);
 const data = ref<{ [key: string]: string }[]>([]);
 
-async function queryTable(table: string) {
-    const res = await cbFetch(`/api/table/${table}`)
+async function queryTable(table: string, where?: string) {
+    let query = `/api/table/${table}`;
+    if(where) query+=`?where=${where}`;
+    const res = await cbFetch(query)
     cols.value = res.columns;
     data.value = res.data;
     error.value = res.error;
+    currentTable.value = table;
+    router.push(table);
 }
 
 onMounted(async () => {
@@ -101,6 +108,7 @@ onMounted(async () => {
                         </Tooltip>
                     </TooltipProvider>
                 </DialogTrigger>
+                <EditTable :tableName="currentTable"></EditTable>
             </Dialog>
 
 
@@ -123,8 +131,8 @@ onMounted(async () => {
             </Dialog>
 
 
-                    <Input type="text" placeholder="Where clause" />
-                    <Button variant="outline">
+                    <Input type="text" v-model="whereClause" placeholder="Where clause" />
+                    <Button variant="outline" @click="queryTable(currentTable, whereClause)">
                         <Play />
                     </Button>
                 </div>
