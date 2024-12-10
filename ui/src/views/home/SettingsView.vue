@@ -18,11 +18,12 @@
     import AddAdmin from '@/components/AddAdmin.vue';
     import { cbFetch } from '@/services/api-service';
     import { onMounted, ref, useTemplateRef } from 'vue';
+import type { Cols } from '@/utils/types';
 
     const loading = ref(false);
 
 
-    const cols = ref<string[]>([]);
+    const cols = ref<Cols[]>([]);
     const data = ref<{ [key: string]: string }[]>([]);
 
 
@@ -62,7 +63,7 @@
                 <TableHeader>
                 <TableRow>
                     <TableHead v-for="col of cols">
-                    {{col}}
+                    {{col.name}}
                     </TableHead>
                     <TableHead>
                         Actions
@@ -72,7 +73,7 @@
                 <TableBody>
                 <TableRow v-for="d of data">
                     <TableCell v-for="col of cols">
-                    {{ d[col] }}
+                    {{ d[col.name] }}
                     </TableCell>
                     <TableCell class="flex gap-1.5 justify-center">
                         <Button variant="secondary">

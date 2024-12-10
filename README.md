@@ -42,6 +42,7 @@ The final goal is to implements as many features Pocketbase offers.
 - [ ] API Rules
 - [ ] Real time change through websocket
 - [ ] JS engine to add custom behavior _(probably gonna use [Duktape Engine](https://duktape.org/))_
+- [ ] Mail
 
 
 ## Why C_Base :
@@ -55,5 +56,6 @@ Feel free to open an issue or start a discussion if you have any questions or im
 Next items I will work on :
 
 - [ ] Create table from Admin UI 
+- [ ] Config table for Admins
 - [ ] Where clause from API
 - [ ] Prevent access to password and salt from user table _(didn't find elegant way to do it yet)_

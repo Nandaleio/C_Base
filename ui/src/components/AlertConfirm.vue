@@ -10,10 +10,20 @@ import {
 } from '@/components/ui/alert-dialog'
 
 
-defineProps<{
+const props = defineProps<{
         description: string
         action: () => any;
     }>()
+
+async function confirmFn() {
+  await props.action();
+  emit('confirm');
+}
+
+const emit = defineEmits<{
+  cancel: []
+  confirm: []
+}>()
 </script>
 
 <template>
@@ -25,8 +35,8 @@ defineProps<{
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
-        <AlertDialogCancel>Cancel</AlertDialogCancel>
-        <AlertDialogAction @click="action">Continue</AlertDialogAction>
+        <AlertDialogCancel @click="emit('cancel')">Cancel</AlertDialogCancel>
+        <AlertDialogAction @click="confirmFn">Continue</AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
 </template>

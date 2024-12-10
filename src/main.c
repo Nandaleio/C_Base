@@ -256,7 +256,7 @@ void admin_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http_me
 
     struct mg_str caps[3];
     if(mg_match(hm->uri, mg_str("#/admin/*"), caps)){
-        char *admin_id = caps[20].buf;
+        char *admin_id = caps[1].buf;
         if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
             char *username = mg_json_get_str(hm->body, "$.username");
             char *password = mg_json_get_str(hm->body, "$.password");
@@ -267,6 +267,24 @@ void admin_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http_me
         }
         if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
             char *json = db_delete_admin(admin_id);
+            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+            free(json);
+            return;
+        }
+    }
+
+    if (mg_match(hm->uri, mg_str("#/table/*"), caps))
+    {
+        char *table_name = strtok(caps[1].buf, " ");
+        if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
+            char *json_column = mg_json_get_str(hm->body, "$.column");
+            char *json = db_create_table(table_name, json_column);
+            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+            free(json);
+            return;
+        }
+        if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
+            char *json = db_delete_table(table_name);
             mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
             free(json);
             return;

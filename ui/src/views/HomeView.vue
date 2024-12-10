@@ -73,13 +73,10 @@ onMounted(async () => {
   <SidebarProvider>
     <Sidebar collapsible="icon">
       <SidebarHeader>
+
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <SidebarMenuButton size="lg"
-                  class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                >
+                <SidebarMenuButton size="lg" class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
                   <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     <AppWindow />
                   </div>
@@ -88,8 +85,6 @@ onMounted(async () => {
                     <span class="truncate text-xs">{{ appStore.version }}</span>
                   </div>
                 </SidebarMenuButton>
-              </DropdownMenuTrigger>
-            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

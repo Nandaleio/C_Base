@@ -10,6 +10,7 @@
 
 #define ADMIN_TABLE "cb_admin"
 #define LOG_TABLE "cb_log"
+#define CONFIG_TABLE "cb_config"
 #define USER_TABLE "user"
 
 typedef struct user {
@@ -40,5 +41,8 @@ char *db_admin_login(char *username, char *password);
 char *db_add_admin(char *username, char *password);
 char *db_delete_admin(char *username);
 char *db_get_admins();
+
+char *db_delete_table(char* table_name);
+char *db_create_table(char* table_name, char* table_columns);
 
 #endif
