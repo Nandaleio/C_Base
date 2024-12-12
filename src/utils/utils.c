@@ -2,8 +2,10 @@
 
 #include <stddef.h>
 #include <stdio.h>
-#include "../includes/utils.h"
-#include "../includes/db.h"
+
+#include "utils.h"
+#include "info.h"
+#include "../db/db.h"
 #include "../libs/log.h"
 #include "../libs/mongoose.h"
 #include "../libs/parson.h"

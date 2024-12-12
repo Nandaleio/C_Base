@@ -37,6 +37,7 @@ import {
   Settings,
   Pencil,
   Logs,
+  Sun, Moon
 } from 'lucide-vue-next'
 import NavBreadCrumb from '@/components/NavBreadCrumb.vue'
 import {userStore} from "@/stores/user-store";
@@ -45,7 +46,10 @@ import router from '@/router'
 import { env } from '@/utils/env'
 import { onMounted } from 'vue'
 import { cbFetch } from '@/services/api-service'
+import { useColorMode } from '@vueuse/core'
 
+
+const mode = useColorMode()
 const list = [
         {icon: Database, path: '/tables', tooltip: "tables", title: "Tables"},
         {icon: Pencil, path: '/editor', tooltip: "editor", title: "Editor"},
@@ -133,10 +137,19 @@ onMounted(async () => {
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent class="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg" side="bottom" align="end" :side-offset="4">
+                
                 <DropdownMenuGroup>
                   <DropdownMenuItem @click="router.push('/settings')"  class="cursor-pointer">
                     <Settings />
                     Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @click="mode = (mode === 'dark') ? 'light' : 'dark'"  class="cursor-pointer">
+                    <template v-if="mode === 'light'">
+                      <Moon/> Dark
+                    </template>
+                    <template v-else>
+                      <Sun /> Light
+                    </template>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />

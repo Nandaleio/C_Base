@@ -4,17 +4,16 @@
 #include <signal.h>
 #include <ctype.h>
 
-#include "../includes/db.h"
-#include "../includes/utils.h"
-#include "../includes/jwt.h"
+#include "db/db.h"
 
-#include "../libs/parson.h"
-#include "../libs/mongoose.h"
-#include "../libs/log.h"
+#include "libs/parson.h"
+#include "libs/mongoose.h"
+#include "libs/log.h"
 
-#define CBASE_VERSION "0.0.1"
+#include "utils/info.h"
 
-#define MG_API_HEADERS "Content-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: *\r\n"
+#include "routes/admin-route.h"
+#include "routes/standard-route.h"
 
 // Initialize Mongoose server options
 char *s_http_port = "http://0.0.0.0:8080";
@@ -22,8 +21,6 @@ char *s_http_port = "http://0.0.0.0:8080";
 static volatile int running = 1;
 void shut_down(int dummy) { running = 0; }
 
-void admin_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http_message *hm);
-void standard_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http_message *hm);
 // TODO void websocket_api();
 
 // HTTP event handler
@@ -44,10 +41,10 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data)
 
         if (mg_match(hm->uri, mg_str("/api/admin/#"), NULL))
         {
-            return admin_api(c, ev, ev_data, hm);
+            return admin_routes(c, ev, ev_data, hm);
         }
 
-        return standard_api(c, ev, ev_data, hm);
+        return standard_routes(c, ev, ev_data, hm);
     }
 
     // ----- UNPROTECTED API -----
@@ -217,144 +214,5 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void admin_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http_message *hm)
-{
-    if (mg_match(hm->uri, mg_str("#/login"), NULL))
-    {
-        char *username = mg_json_get_str(hm->body, "$.username");
-        char *password = mg_json_get_str(hm->body, "$.password");
-        char *json = db_admin_login(username, password);
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        json_free_serialized_string(json);
-        return;
-    }
-    
-    // ADMIN CHECK GUARD
-    char user[1], token[512];
-    mg_http_creds(hm, user, sizeof(user), token, sizeof(token));
-    if (token == NULL || jwt_verify(token, JWT_SECRET_KEY, true) != 0)
-    {
-        return mg_http_reply(c, 401, MG_API_HEADERS, "Unauthorized");
-    }
 
-    if (mg_match(hm->uri, mg_str("#/logs"), NULL))
-    {
-        char *json = db_get_logs();
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        json_free_serialized_string(json);
-        return;
-    }
 
-    if (mg_match(hm->uri, mg_str("#/query"), NULL))
-    {
-        char *query = mg_json_get_str(hm->body, "$.query");
-        char *json = db_query(query);
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        json_free_serialized_string(json);
-        return;
-    }
-
-    struct mg_str caps[3];
-    if(mg_match(hm->uri, mg_str("#/admin/*"), caps)){
-        char *admin_id = caps[1].buf;
-        if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
-            char *username = mg_json_get_str(hm->body, "$.username");
-            char *password = mg_json_get_str(hm->body, "$.password");
-            char *json = db_add_admin(username, password);
-            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-            free(json);
-            return;
-        }
-        if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
-            char *json = db_delete_admin(admin_id);
-            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-            free(json);
-            return;
-        }
-    }
-
-    if (mg_match(hm->uri, mg_str("#/table/*"), caps))
-    {
-        char *table_name = strtok(caps[1].buf, " ");
-        if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
-            char *json_column = mg_json_get_str(hm->body, "$.column");
-            char *json = db_create_table(table_name, json_column);
-            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-            free(json);
-            return;
-        }
-        if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
-            char *json = db_delete_table(table_name);
-            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-            free(json);
-            return;
-        }
-    }
-
-    if (mg_match(hm->uri, mg_str("#/admins"), NULL))
-    {
-        char *json = db_get_admins();
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        json_free_serialized_string(json);
-        return;
-    }
-}
-
-void standard_api(struct mg_connection *c, int ev, void *ev_data, struct mg_http_message *hm)
-{
-    // EXCEPT REGISTER AND LOGIN
-    if (mg_match(hm->uri, mg_str("/api/auth/register"), NULL))
-    {
-        char *username = mg_json_get_str(hm->body, "$.username");
-        char *password = mg_json_get_str(hm->body, "$.password");
-        char *json = db_add_user(username, password);
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        free(json);
-        return;
-    }
-
-    if (mg_match(hm->uri, mg_str("/api/auth/login"), NULL))
-    {
-        char *username = mg_json_get_str(hm->body, "$.username");
-        char *password = mg_json_get_str(hm->body, "$.password");
-        char *json = db_login(username, password);
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        free(json);
-        return;
-    }
-
-    // AUTH CHECK GUARD
-    char user[1], token[512];
-    mg_http_creds(hm, user, sizeof(user), token, sizeof(token));
-    if (token == NULL || jwt_verify(token, JWT_SECRET_KEY, false) != 0)
-    {
-        return mg_http_reply(c, 401, MG_API_HEADERS, "Unauthorized");
-    }
-
-    struct mg_str caps[3];
-    if (mg_match(hm->uri, mg_str("*/table/*"), caps))
-    {
-        char *table_name = strtok(caps[1].buf, " ");
-        char *where_clause = mg_http_var(hm->query, mg_str("where")).buf;
-        char *json = db_get_table(table_name, where_clause);
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        json_free_serialized_string(json);
-        return;
-    }
-
-    if (mg_match(hm->uri, mg_str("*/tables"), NULL))
-    {
-        char *json = db_get_tables();
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        json_free_serialized_string(json);
-        return;
-    }
-
-    if (mg_match(hm->uri, mg_str("*/version"), NULL))
-    {
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", "{\"version\": \""CBASE_VERSION"\"}");
-        return;
-    }
-
-    return mg_http_reply(c, 404, MG_API_HEADERS "Access-Control-Allow-Headers: *\r\n\r\n", "Not Found");
-}

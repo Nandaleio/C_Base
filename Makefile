@@ -8,7 +8,10 @@ CFLAGS = -Wall -Wextra -DMG_ENABLE_PACKED_FS=1 -w -DLOG_USE_COLOR
 INCLUDES = -Iinclude  # Ensure this points to mongoose.h and sqlite3.h if needed
 
 # Source files
-SRCS = ./src/main.c ./libs/sqlite3.c ./libs/mongoose.c ./libs/log.c ./libs/parson.c ./src/fs.c ./src/db.c ./src/utils.c ./src/jwt.c
+SRCS = ./src/main.c ./src/fs.c 
+SRCS += ./src/libs/sqlite3.c ./src/libs/mongoose.c ./src/libs/log.c ./src/libs/parson.c
+SRCS += ./src/db/db.c ./src/utils/utils.c ./src/utils/jwt.c ./src/routes/standard-route.c ./src/routes/admin-route.c
+SRCS += ./src/controllers/admin-controller.c ./src/controllers/standard-controller.c ./src/controllers/auth-controller.c
 
 LDFLAGS :=
 TARGET = C_Base

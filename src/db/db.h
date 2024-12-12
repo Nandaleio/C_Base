@@ -24,25 +24,9 @@ extern sqlite3 *db;
 int db_init();
 int db_close();
 
-// UTILS
 char *db_query(char *query);
+char *db_query_param(const char* query, ...);
 void db_sqlite_log_callback(log_Event *ev);
 
-//TABLES
-char *db_get_tables();
-char *db_get_table(char *table_name, char* where_clause);
-char *db_get_logs();
-
-//AUTH
-char *db_add_user(char *username, char *password);
-char *db_login(char* username, char *password);
-
-char *db_admin_login(char *username, char *password);
-char *db_add_admin(char *username, char *password);
-char *db_delete_admin(char *username);
-char *db_get_admins();
-
-char *db_delete_table(char* table_name);
-char *db_create_table(char* table_name, char* table_columns);
 
 #endif

@@ -5,6 +5,12 @@ export type Cols = {
     type:string
 }
 
+export type Config = {
+    name: string 
+    value: string
+    type: string
+}
+
 export const DataType = {
     1: 'INTEGER',
     2: 'FLOAT',
