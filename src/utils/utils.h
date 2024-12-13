@@ -3,7 +3,6 @@
 
 #include "../libs/sqlite3.h"
 
-#define SALT_LENGTH 20
 
 char *db_sqlite_to_json(sqlite3_stmt *stmt);
 

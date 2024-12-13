@@ -1,166 +1,13 @@
-
-
-#include <stdio.h>
+#include "auth-controller.h"
 
 #include "../libs/parson.h"
-
-#include "../includes/db.h"
-#include "../includes/utils.h"
-#include "../includes/jwt.h"
-
-sqlite3 *db;
-
-int db_init() {
-    
-    if (sqlite3_open(DB_PATH, &db) != SQLITE_OK) {
-        log_error("Failed to open database: %s", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return 1;
-    }
-
-    sqlite3_stmt* stmt = NULL;
-
-    int retval;
-    char *errMsg = 0;
-
-    char *sql = "CREATE TABLE IF NOT EXISTS " ADMIN_TABLE " ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
-        "username TEXT UNIQUE NOT NULL, "
-        "email TEXT, "
-        "avatar BLOB, "
-        "password TEXT NOT NULL, "
-        "salt TEXT NOT NULL)";
-
-    // Execute the SQL statement
-    retval = sqlite3_exec(db, sql, 0, 0, &errMsg);
-    if (retval != SQLITE_OK) {
-        log_error("SQL error: %s", errMsg);
-        sqlite3_free(errMsg);
-    } else {
-        log_trace("Table \""ADMIN_TABLE"\" created successfully.");
-    }
-
-    // -- ADD DEFAULT ADMIN --
-    sql = "INSERT INTO " ADMIN_TABLE "(username, password, salt, email)"
-        "SELECT 'admin', ?, ?, 'admin@C_Base.com'"
-        "WHERE NOT EXISTS (SELECT 1 FROM "ADMIN_TABLE")";
-
-    char salt[SALT_LENGTH+1];
-    char *admin_pass = hash_password("admin", salt);
-
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
-        free(admin_pass);
-    }
-
-    if (sqlite3_bind_text(stmt, 1, admin_pass, -1, SQLITE_STATIC) != SQLITE_OK) {
-        log_error("Failed to bind admin password parameter: %s", sqlite3_errmsg(db));
-        free(admin_pass);
-    }
-    if (sqlite3_bind_text(stmt, 2, salt, -1, SQLITE_STATIC) != SQLITE_OK) {
-        log_error("Failed to bind admin salt parameter: %s", sqlite3_errmsg(db));
-        free(admin_pass);
-    }
-    
-    if(sqlite3_step(stmt) != SQLITE_DONE) {
-        log_error("Failed to insert user: %s", sqlite3_errmsg(db));
-        free(admin_pass); 
-	}
-    
-	if(sqlite3_finalize(stmt) != SQLITE_OK){
-        log_error("Failed finalize statement: %s", sqlite3_errmsg(db));
-        free(admin_pass); 
-    }
-    
-    free(admin_pass); 
-    // -- END ADD DEFAULT ADMIN --
+#include "../libs/sqlite3.h"
+#include "../db/db.h"
+#include "../utils/jwt.h"
+#include "../utils/info.h"
 
 
-    sql = "CREATE TABLE IF NOT EXISTS " USER_TABLE " ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
-        "username TEXT UNIQUE NOT NULL, "
-        "password TEXT NOT NULL, "
-        "salt TEXT NOT NULL)";
-    retval = sqlite3_exec(db, sql, 0, 0, &errMsg);
-    if (retval != SQLITE_OK) {
-        log_error("SQL error: %s", errMsg);
-        sqlite3_free(errMsg);
-    } else {
-        log_trace("Table \""USER_TABLE"\" created successfully.");
-    }
-
-    sql = "CREATE TABLE IF NOT EXISTS " LOG_TABLE " ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
-        "level TEXT NOT NULL, "
-        "description TEXT NOT NULL)";
-    retval = sqlite3_exec(db, sql, 0, 0, &errMsg);
-    if (retval != SQLITE_OK) {
-        log_error("SQL error: %s", errMsg);
-        sqlite3_free(errMsg);
-    } else {
-        log_trace("Table \""LOG_TABLE"\" created successfully.");
-    }
-
-    return retval;
-}
-
-int db_close() {
-    return sqlite3_close(db);
-}
-
-char *db_query(char* query) {
-
-    log_debug("received query : %s", query);
-
-    sqlite3_stmt *stmt;
-    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
-        log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to prepare statement\"}";
-    }
-
-    char *json = db_sqlite_to_json(stmt);
-
-    if (!json) {
-        log_error("Failed to convert result set to JSON");
-    }
-
-    if(sqlite3_finalize(stmt) != SQLITE_OK) {
-        log_error("Failed to finalize the statement");
-    }
-
-    return json;
-}
-
-char *db_get_tables() {
-    char *query = "SELECT name FROM sqlite_master WHERE type='table' and name not like 'sqlite_%' and name not like 'cb_%'";
-    char *json = db_query(query);
-    return json;
-}
-
-char *db_get_table(char *table_name) {
-    char *query = malloc(16 + sizeof(table_name));
-    snprintf(query, strlen(query), "SELECT * FROM %s", table_name);
-    char *json = db_query(query);
-    free(query);
-    return json;
-}
-
-char *db_get_logs() {
-    char *query = "SELECT created, level, description FROM " LOG_TABLE " order by created desc";
-    char *json = db_query(query);
-    return json;
-}
-
-char *db_get_admins() {
-    char *query = "SELECT id, username, email, avatar, created FROM " ADMIN_TABLE ;
-    char *json = db_query(query);
-    return json;
-}
-
-char *db_add_user(char *username, char *password) {
+char *auth_add_user(char *username, char *password) {
     
     log_info("Adding new user: %s", username);
     char* query = "INSERT INTO " USER_TABLE " (username, salt, password) VALUES (?,?,?)";
@@ -208,7 +55,7 @@ char *db_add_user(char *username, char *password) {
     return "{\"error\": \"\"}";
 }
 
-char *db_login(char *username, char *password) {
+char *auth_login(char *username, char *password) {
     
     log_trace("User %s logging in", username);
     char *query = "select password, salt from " USER_TABLE " where username = ?";
@@ -258,7 +105,7 @@ char *db_login(char *username, char *password) {
     return json;
 }
 
-char *db_admin_login(char *username, char *password) {
+char *auth_admin_login(char *username, char *password) {
     
     log_trace("Admin %s logging in", username);
     char *query = "select password, salt, email from " ADMIN_TABLE " where username = ?";
@@ -315,7 +162,7 @@ char *db_admin_login(char *username, char *password) {
     return json;
 }
 
-char *db_add_admin(char *username, char *password) {
+char *auth_add_admin(char *username, char *password) {
     
     log_info("Adding new admin: %s", username);
     char* query = "INSERT INTO " ADMIN_TABLE " (username, salt, password) VALUES (?,?,?)";
@@ -363,7 +210,7 @@ char *db_add_admin(char *username, char *password) {
     return "{\"error\": \"\"}";
 }
 
-char *db_delete_admin(char *username) {
+char *auth_delete_admin(char *username) {
     log_info("Deleting admin: %s", username);
     char* query = "DELETE FROM " ADMIN_TABLE " WHERE condition id = ?";
     sqlite3_stmt *stmt;
@@ -384,30 +231,4 @@ char *db_delete_admin(char *username) {
         return "{\"error\": \"Failed finalize statement:\"}";
     }
     return "{\"error\": \"\"}";
-}
-
-void db_sqlite_log_callback(log_Event *ev) {
-    const char *sql = "INSERT INTO " LOG_TABLE " (level, description) VALUES (?, ?);";
-    sqlite3_stmt *stmt;
-
-    // Prepare the SQL statement
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        return;
-    }
-    int size = vsnprintf(NULL, 0, ev->fmt, ev->ap);
-    char *final_message = (char*)malloc(size + 1);
-    vsnprintf(final_message, size + 1, ev->fmt, ev->ap);
-    // Bind log event parameters to the SQL statement
-    sqlite3_bind_text(stmt, 1, log_level_string(ev->level), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, final_message, -1, SQLITE_STATIC);
-
-    // Execute the SQL statement
-    if (sqlite3_step(stmt) != SQLITE_DONE) {
-        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
-    }
-
-    // Finalize the statement
-    sqlite3_finalize(stmt);
-    free(final_message);
 }

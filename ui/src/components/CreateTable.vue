@@ -4,7 +4,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogClose
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input';
@@ -17,9 +18,13 @@ import {
 } from '@/components/ui/select'
 import { Trash2 } from 'lucide-vue-next'
 import { ref } from 'vue';
+import type { Cols } from '@/utils/types';
 
 const tableName = ref<string>('');
-const column = ref<{name:string, type:string}[]>([]);
+const column = ref<Cols[]>([
+    {name: 'id', type: 'TEXT'},
+    {name: 'created', type: 'TEXT'},
+]);
 </script>
 
 <template>
@@ -41,12 +46,10 @@ const column = ref<{name:string, type:string}[]>([]);
                 <SelectValue placeholder="Column type" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="apple">Apple</SelectItem>
-                    <SelectItem value="apple">Apple</SelectItem>
-                    <SelectItem value="apple">Apple</SelectItem>
-                    <SelectItem value="apple">Apple</SelectItem>
-                    <SelectItem value="apple">Apple</SelectItem>
-                    <SelectItem value="apple">Apple</SelectItem>
+                    <SelectItem value="INTEGER">Integer</SelectItem>
+                    <SelectItem value="REAL">Real</SelectItem>
+                    <SelectItem value="TEXT">Text</SelectItem>
+                    <SelectItem value="BLOB">File</SelectItem>
                 </SelectContent>
             </Select>
             <Button variant="destructive" @click="column.splice(column.indexOf(col), 1)">
@@ -57,6 +60,11 @@ const column = ref<{name:string, type:string}[]>([]);
         <Button variant="outline" @click="column.push({name:'', type:''})">Add Column</Button>
 
         <DialogFooter>
+            <DialogClose as-child>
+                    <Button type="button" variant="secondary">
+                        Cancel
+                    </Button>
+                </DialogClose>
             <Button @click="">
                 Create Table
             </Button>

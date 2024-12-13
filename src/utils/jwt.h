@@ -9,6 +9,6 @@
 #define JWT_TOKEN_EXPIRED 2
 
 char *jwt_sign(const char *header, const char *payload, const char *secret);
-int jwt_verify(const char *jwt, const char *secret, int is_admin);
+int jwt_verify(const char *jwt, int is_admin);
 
 #endif

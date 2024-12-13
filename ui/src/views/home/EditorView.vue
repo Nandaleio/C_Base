@@ -1,17 +1,11 @@
 <script setup lang="ts">
-    import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-    } from '@/components/ui/table'
+
+import Table from '@/components/Table.vue'
     import { Button } from '@/components/ui/button'
     import { Textarea } from '@/components/ui/textarea'
 
     import { cbFetch } from '@/services/api-service';
-    import { ref } from 'vue';
+    import { onMounted, ref, useTemplateRef } from 'vue';
 
     const sqlQuery = ref('');
 
@@ -28,31 +22,20 @@
         error.value = res.error;
         loading.value = false;
     }
+
 </script>
 
 <template>
     <div class="main-container p-4">
+        
         <Textarea v-model="sqlQuery" name="sqlQuery"></Textarea>
         <div class="actions">
             <Button variant="outline" @click="query">run</Button>
         </div>
         <div class="content" :aria-busy="loading">
-            <Table v-if="cols && cols.length">
-                <TableHeader>
-                <TableRow>
-                    <TableHead v-for="col of cols">
-                    {{col}}
-                    </TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                <TableRow v-for="d of data">
-                    <TableCell v-for="col of cols">
-                    {{ d[col] }}
-                    </TableCell>
-                </TableRow>
-                </TableBody>
-            </Table>
+            <template v-if="cols && cols.length">
+                <Table :cols="cols" :data="data"></Table>
+            </template>
             <pre v-else-if="error" class="error">{{ error }}</pre>
         </div>
     </div>

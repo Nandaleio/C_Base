@@ -12,7 +12,7 @@ const router = createRouter({
   routes: [
     { path: '/login', name: 'login', component: LoginView},
     { path: '/', component: HomeView, children: [
-      { path: '/tables', component: TablesView },
+      { path: '/tables/:table*', component: TablesView },
       { path: '/editor', component: EditorView },
       { path: '/logs', component: LogsView },
       { path: '/settings', component: SettingsView },

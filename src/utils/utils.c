@@ -2,8 +2,10 @@
 
 #include <stddef.h>
 #include <stdio.h>
-#include "../includes/utils.h"
-#include "../includes/db.h"
+
+#include "utils.h"
+#include "info.h"
+#include "../db/db.h"
 #include "../libs/log.h"
 #include "../libs/mongoose.h"
 #include "../libs/parson.h"
@@ -31,8 +33,13 @@ char *db_sqlite_to_json(sqlite3_stmt *stmt) {
 
     int col_count = sqlite3_column_count(stmt);
     for (int i = 0; i < col_count; i++) {
+        JSON_Value *row_value = json_value_init_object();
+        JSON_Object *row_object = json_value_get_object(row_value);
         const char *col_name = sqlite3_column_name(stmt, i);
-        json_array_append_string(columns_array, col_name);
+        const char *col_type = sqlite3_column_decltype(stmt, i);
+        json_object_set_string(row_object, "name", col_name);
+        json_object_set_string(row_object, "type", col_type);
+        json_array_append_value(columns_array, row_value);
     }
 
     // Add data array

@@ -1,42 +1,57 @@
 <script setup lang="ts">
 
-    import {
+import {
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
     TableRow,
-    } from '@/components/ui/table'
-    import {
+} from '@/components/ui/table'
+import {
     Dialog,
     DialogTrigger,
-    } from '@/components/ui/dialog'
-    import { Button } from '@/components/ui/button';
-    import { Pencil, Trash2 } from 'lucide-vue-next'
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button';
+import { Pencil, Trash2 } from 'lucide-vue-next'
 
-    import AddAdmin from '@/components/AddAdmin.vue';
-    import { cbFetch } from '@/services/api-service';
-    import { onMounted, ref, useTemplateRef } from 'vue';
+import AddAdmin from '@/components/AddAdmin.vue';
+import { cbFetch } from '@/services/api-service';
+import { onMounted, ref } from 'vue';
+import { Separator } from '@/components/ui/separator'
+import type { Cols, Config } from '@/utils/types';
+import Input from '@/components/ui/input/Input.vue';
+import { Switch } from '@/components/ui/switch'
 
-    const loading = ref(false);
+import {
+  NumberField,
+  NumberFieldContent,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from '@/components/ui/number-field'
+
+const adminCols = ref<Cols[]>([]);
+const adminData = ref<{ [key: string]: string }[]>([]);
+
+const config = ref<Config[]>([]);
 
 
-    const cols = ref<string[]>([]);
-    const data = ref<{ [key: string]: string }[]>([]);
+async function queryAdmins() {
+    const res = await cbFetch(`/api/admin/admins`)
+    adminCols.value = res.columns;
+    adminData.value = res.data;
+}
 
+async function queryConfig() {
+    const res = await cbFetch(`/api/admin/configs`)
+    config.value = res.data;
+}
 
-    async function queryAdmins() {
-        loading.value = true;
-        const res = await cbFetch(`/api/admin/admins`)
-        cols.value = res.columns;
-        data.value = res.data;
-        loading.value = false;
-    }
-
-    onMounted(async () => {
-        await queryAdmins();
-    })
+onMounted(async () => {
+    await queryAdmins();
+    await queryConfig();
+})
 </script>
 
 <template>
@@ -45,6 +60,35 @@
             Settings
         </h2>
         <p class="leading-7 [&:not(:first-child)]:mb-6">Configure your app and the admins</p>
+
+
+        <Separator class="m-4" label="Configuration" />
+
+        <Table v-if="config && config.length">
+            <TableBody>
+                <TableRow v-for="conf of config">
+                    <TableCell>
+                        {{ conf.name }}
+                    </TableCell>
+                    <TableCell>
+                        <Switch v-if="conf.type === 'BOOLEAN'" :checked="conf.value == 'true'" @update:checked="(v) => conf.value = v+''"/>
+                        <NumberField v-else-if="conf.type === 'NUMBER'" :model-value="+conf.value" @update:model-value="(v) => conf.value = v+''">
+                            <NumberFieldContent>
+                            <NumberFieldDecrement />
+                            <NumberFieldInput />
+                            <NumberFieldIncrement />
+                            </NumberFieldContent>
+                        </NumberField>
+                        <Input v-else type="text" :model-value="conf.value" @update:model-value="(v) => conf.value = v+''"/>
+                    </TableCell>
+                </TableRow>
+            </TableBody>
+        </Table>
+        <Button>
+                        Save Change
+                    </Button>
+
+        <Separator class="m-4" label="Admin" />
 
         <div class="actions">
             <Dialog>
@@ -58,21 +102,21 @@
         </div>
 
 
-        <Table v-if="cols && cols.length">
-                <TableHeader>
+        <Table v-if="adminCols && adminCols.length">
+            <TableHeader>
                 <TableRow>
-                    <TableHead v-for="col of cols">
-                    {{col}}
+                    <TableHead v-for="col of adminCols">
+                        {{ col.name }}
                     </TableHead>
                     <TableHead>
                         Actions
                     </TableHead>
                 </TableRow>
-                </TableHeader>
-                <TableBody>
-                <TableRow v-for="d of data">
-                    <TableCell v-for="col of cols">
-                    {{ d[col] }}
+            </TableHeader>
+            <TableBody>
+                <TableRow v-for="d of adminData">
+                    <TableCell v-for="col of adminCols">
+                        {{ d[col.name] }}
                     </TableCell>
                     <TableCell class="flex gap-1.5 justify-center">
                         <Button variant="secondary">
@@ -83,8 +127,8 @@
                         </Button>
                     </TableCell>
                 </TableRow>
-                </TableBody>
-            </Table>
+            </TableBody>
+        </Table>
     </div>
 </template>
 
@@ -95,6 +139,7 @@
     top: 1rem;
     display: flex;
 }
+
 .settings-container {
     padding: 1rem;
     display: flex;
