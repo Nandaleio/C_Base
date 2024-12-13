@@ -27,7 +27,7 @@ int db_init() {
 
     char *sql = "CREATE TABLE IF NOT EXISTS " ADMIN_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
+        "created INTEGER DEFAULT (CURRENT_TIMESTAMP),"
         "username TEXT UNIQUE NOT NULL, "
         "email TEXT, "
         "avatar BLOB, "
@@ -80,7 +80,7 @@ int db_init() {
 
     sql = "CREATE TABLE IF NOT EXISTS " USER_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
+        "created INTEGER DEFAULT (CURRENT_TIMESTAMP),"
         "username TEXT UNIQUE NOT NULL, "
         "email TEXT, "
         "avatar BLOB, "
@@ -96,7 +96,7 @@ int db_init() {
 
     sql = "CREATE TABLE IF NOT EXISTS " LOG_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created TEXT DEFAULT (CURRENT_TIMESTAMP),"
+        "created INTEGER DEFAULT (CURRENT_TIMESTAMP),"
         "level TEXT NOT NULL, "
         "description TEXT NOT NULL)";
     retval = sqlite3_exec(db, sql, 0, 0, &errMsg);
@@ -118,10 +118,11 @@ int db_init() {
     }
 
     sql = "INSERT INTO " CONFIG_TABLE " VALUES "
-    "('ALLOW REGISTER', 'true', 'BOOLEAN') ";
+    "('ALLOW REGISTER', 'true', 'BOOLEAN'), "
+    "('JWT DURATION', '3600', 'NUMBER') ";
 
-    retval = sqlite3_exec(db, sql, 0, 0, &errMsg);
-    if (retval != SQLITE_OK) {
+    int no_ret = sqlite3_exec(db, sql, 0, 0, &errMsg);
+    if (no_ret != SQLITE_OK) {
         log_error("SQL error: %s", errMsg);
         sqlite3_free(errMsg);
     } else {

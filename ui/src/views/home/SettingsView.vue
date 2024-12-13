@@ -21,6 +21,15 @@ import { onMounted, ref } from 'vue';
 import { Separator } from '@/components/ui/separator'
 import type { Cols, Config } from '@/utils/types';
 import Input from '@/components/ui/input/Input.vue';
+import { Switch } from '@/components/ui/switch'
+
+import {
+  NumberField,
+  NumberFieldContent,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from '@/components/ui/number-field'
 
 const adminCols = ref<Cols[]>([]);
 const adminData = ref<{ [key: string]: string }[]>([]);
@@ -62,7 +71,15 @@ onMounted(async () => {
                         {{ conf.name }}
                     </TableCell>
                     <TableCell>
-                        <Input type="text" :model-value="conf.value" />
+                        <Switch v-if="conf.type === 'BOOLEAN'" :checked="conf.value == 'true'" @update:checked="(v) => conf.value = v+''"/>
+                        <NumberField v-else-if="conf.type === 'NUMBER'" :model-value="+conf.value" @update:model-value="(v) => conf.value = v+''">
+                            <NumberFieldContent>
+                            <NumberFieldDecrement />
+                            <NumberFieldInput />
+                            <NumberFieldIncrement />
+                            </NumberFieldContent>
+                        </NumberField>
+                        <Input v-else type="text" :model-value="conf.value" @update:model-value="(v) => conf.value = v+''"/>
                     </TableCell>
                 </TableRow>
             </TableBody>

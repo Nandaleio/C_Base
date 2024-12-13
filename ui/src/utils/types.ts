@@ -11,6 +11,12 @@ export type Config = {
     type: string
 }
 
+export type Log = {
+    created: Date, 
+    level: string, 
+    description: string
+}
+
 export const DataType = {
     1: 'INTEGER',
     2: 'FLOAT',

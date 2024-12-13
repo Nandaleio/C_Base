@@ -111,3 +111,8 @@ char *ctr_get_config_value(char *config_name){
     char *json = db_query_param(query, config_name);
     return json;
 }
+
+char *ctr_set_config_value(char *config_name, char* config_value) {
+    char *query = "UPDATE " CONFIG_TABLE " SET value = ?  WHERE name = ?";
+    char *json = db_query_param(query, config_value, config_name);
+}

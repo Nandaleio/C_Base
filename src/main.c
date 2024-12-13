@@ -187,7 +187,6 @@ int main(int argc, char *argv[])
     if (init_mg(&mgr) != 0)
         return 1;
 
-    // Set up HTTP server
     log_info("Starting web server on %s", s_http_port);
 
     FILE *fptr;
