@@ -26,6 +26,7 @@ else ifeq ($(PLATFORM),Darwin)
   $(info OSX build...)
 else
   CFLAGS += -D Windows
+  SRCS += resource.res
   LDFLAGS = -lws2_32  # Linker Flags for Windows (add ws2_32 for networking support)
   $(info Windows build...)
 endif
