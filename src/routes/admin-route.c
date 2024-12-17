@@ -96,9 +96,22 @@ void admin_routes(struct mg_connection *c, int ev, void *ev_data, struct mg_http
 
     if (mg_match(hm->uri, mg_str("#/configs"), NULL))
     {
-        char *json = ctr_get_configs();
-        mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        json_free_serialized_string(json);
-        return;
+        if (mg_strcmp(hm->method, mg_str("PUT")) == 0)
+        {
+            char *name = mg_json_get_str(hm->body, "$.name");
+            char *value = mg_json_get_str(hm->body, "$.value");
+            char *json = ctr_set_config_value(name, value);
+            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+            json_free_serialized_string(json);
+            return;
+
+        } else {
+            char *json = ctr_get_configs();
+            mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
+            json_free_serialized_string(json);
+            return;
+        }
     }
+
+
 }

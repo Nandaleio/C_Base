@@ -30,6 +30,7 @@ import {
   NumberFieldIncrement,
   NumberFieldInput,
 } from '@/components/ui/number-field'
+import { debounce } from '@/lib/utils';
 
 const adminCols = ref<Cols[]>([]);
 const adminData = ref<{ [key: string]: string }[]>([]);
@@ -47,6 +48,10 @@ async function queryConfig() {
     const res = await cbFetch(`/api/admin/configs`)
     config.value = res.data;
 }
+
+const saveConfig = debounce(async (name: string, value: string) => {
+    await cbFetch(`/api/admin/configs`, 'PUT', {name,value});
+}, 500)
 
 onMounted(async () => {
     await queryAdmins();
@@ -71,22 +76,19 @@ onMounted(async () => {
                         {{ conf.name }}
                     </TableCell>
                     <TableCell>
-                        <Switch v-if="conf.type === 'BOOLEAN'" :checked="conf.value == 'true'" @update:checked="(v) => conf.value = v+''"/>
-                        <NumberField v-else-if="conf.type === 'NUMBER'" :model-value="+conf.value" @update:model-value="(v) => conf.value = v+''">
+                        <Switch v-if="conf.type === 'BOOLEAN'" :checked="conf.value == 'true'" @update:checked="(v) => {conf.value = v+''; saveConfig(conf.name, conf.value)}"/>
+                        <NumberField v-else-if="conf.type === 'NUMBER'" :model-value="+conf.value" @update:model-value="(v) => {conf.value = v+''; saveConfig(conf.name, conf.value)}">
                             <NumberFieldContent>
                             <NumberFieldDecrement />
                             <NumberFieldInput />
                             <NumberFieldIncrement />
                             </NumberFieldContent>
                         </NumberField>
-                        <Input v-else type="text" :model-value="conf.value" @update:model-value="(v) => conf.value = v+''"/>
+                        <Input v-else type="text" :model-value="conf.value" @update:model-value="(v) => {conf.value = v+''; saveConfig(conf.name, conf.value)}"/>
                     </TableCell>
                 </TableRow>
             </TableBody>
         </Table>
-        <Button>
-                        Save Change
-                    </Button>
 
         <Separator class="m-4" label="Admin" />
 

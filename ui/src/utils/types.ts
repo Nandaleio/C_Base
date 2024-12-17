@@ -3,6 +3,12 @@
 export type Cols = {
     name: string
     type:string
+    options: {
+        primary?: boolean,
+        autoincrement?: boolean,
+        notnull?: boolean
+        default?: string
+    }
 }
 
 export type Config = {
@@ -12,7 +18,7 @@ export type Config = {
 }
 
 export type Log = {
-    created: Date, 
+    created: number, 
     level: string, 
     description: string
 }

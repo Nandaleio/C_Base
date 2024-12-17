@@ -19,25 +19,18 @@ import {
 import { AlertDialogTrigger, AlertDialog } from '@/components/ui/alert-dialog'
 import AlertConfirm from '@/components/AlertConfirm.vue';
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
 import { Trash2, Settings } from 'lucide-vue-next'
 import { ref } from 'vue';
 import { cbFetch } from '@/services/api-service';
 
+import ColumnDefinition from '@/components/ColumnDefinition.vue';
+import type { Cols } from '@/utils/types';
 
 const props = defineProps<{
     tableName: string,
-    cols?: { name: string, type: string }[]
+    cols?: Cols[]
 }>()
 
-const column = ref<{ name: string, type: string }[]>([]);
 const open = ref();
 
 async function deleteTable() {
@@ -77,25 +70,11 @@ const emit = defineEmits<{
                 </DialogDescription>
             </DialogHeader>
 
-            <div class="flex items-center" v-for="col of column">
-                <Input type="text" name="tableName" placeholder="Table Name" v-model="col.name" />
-                <Select v-model="col.type">
-                    <SelectTrigger>
-                        <SelectValue placeholder="Column type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="INTEGER">INTEGER</SelectItem>
-                        <SelectItem value="REAL">REAL</SelectItem>
-                        <SelectItem value="TEXT">TEXT</SelectItem>
-                        <SelectItem value="BLOB">FILE</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Button variant="destructive" @click="column.splice(column.indexOf(col), 1)">
-                    <Trash2 />
-                </Button>
+            <div class="flex items-center" v-for="col of cols">
+                <ColumnDefinition :col="col" @delete="cols?.splice(cols?.indexOf(col), 1)" />
             </div>
 
-            <Button variant="outline" @click="column.push({ name: '', type: '' })">Add Column</Button>
+            <Button variant="outline" @click="cols?.push({name:'', type:'', options: {}})">Add Column</Button>
 
             <AlertDialog>
                 <AlertDialogTrigger>

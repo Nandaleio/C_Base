@@ -137,7 +137,7 @@ int db_close() {
 }
 
 
-char * db_query_param(const char* query, ...) {
+char * db_query_param(const char* query, unsigned int count, ...) {
     
     log_debug("received query param : %s", query);
 
@@ -149,20 +149,26 @@ char * db_query_param(const char* query, ...) {
         log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
         return "{\"error\": \"Failed to prepare statement\"}";
     }
-    int i = 0;
-
-    char *param = va_arg(args, char*);
-    while(param != NULL){
-
+    for(int i = 1 ; i <= count; i++){
+        char* param = va_arg(args, char*);
         if (sqlite3_bind_text(stmt, i, param, -1, SQLITE_STATIC) != SQLITE_OK) {
             log_error("Failed to bind parameter: %s", sqlite3_errmsg(db));
             return "{\"error\": \"Failed to bind parameter\"}";
         }
-        i++;
-        param = va_arg(args, char*);
+    }
+    va_end(args);
+
+    char *json = db_sqlite_to_json(stmt);
+
+    if (!json) {
+        log_error("Failed to convert result set to JSON");
     }
 
-    va_end(args);
+    if(sqlite3_finalize(stmt) != SQLITE_OK) {
+        log_error("Failed to finalize the statement");
+    }
+
+    return json;
 }
 
 char *db_query(char* query) {

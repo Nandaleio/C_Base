@@ -1,7 +1,6 @@
 
 <script setup lang="ts">
 import router from '@/router';
-import { env } from '@/utils/env';
 import { ref } from 'vue'
 
 import { Button } from '@/components/ui/button'
@@ -16,14 +15,12 @@ import { userStore } from '@/stores/user-store';
   const password = ref('');
 
   async function login() {
-    const res = await fetch(`${env.apiURL}/api/admin/login`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/login`, {
       method: 'post',
       body: JSON.stringify({username: username.value, password: password.value})
     })
     if(res.ok) {
       const loginInfo = await res.json();
-
-      console.log(loginInfo);
 
       if(loginInfo.error){
         toast({
@@ -31,7 +28,7 @@ import { userStore } from '@/stores/user-store';
           description: loginInfo.error,
         });
       } else {
-        localStorage.setItem(env.localStorageTokenKey, loginInfo.token);
+        localStorage.setItem(import.meta.env.VITE_LOCALSTORAGE_TOKEN_KEY, loginInfo.token);
         userStore.email = loginInfo.email;
         userStore.username = loginInfo.username;
         userStore.avatar = loginInfo.avatar ?? 'https://avatar.iran.liara.run/public';

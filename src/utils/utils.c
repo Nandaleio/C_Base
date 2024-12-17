@@ -84,7 +84,7 @@ char *db_sqlite_to_json(sqlite3_stmt *stmt) {
 
     // Add error field
     const char *error_msg = sqlite3_errmsg(db);
-    if (row_count == 0 && strlen(error_msg) > 0) {
+    if (row_count == 0 && strlen(error_msg) > 0 && sqlite3_step(stmt) != SQLITE_DONE) {
         json_object_set_string(root_object, "error", error_msg);
     } else {
         json_object_set_null(root_object, "error");

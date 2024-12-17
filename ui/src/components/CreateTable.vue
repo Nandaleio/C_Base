@@ -9,21 +9,15 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Trash2 } from 'lucide-vue-next'
+
+import ColumnDefinition from '@/components/ColumnDefinition.vue';
 import { ref } from 'vue';
 import type { Cols } from '@/utils/types';
 
 const tableName = ref<string>('');
 const column = ref<Cols[]>([
-    {name: 'id', type: 'TEXT'},
-    {name: 'created', type: 'TEXT'},
+    {name: 'id', type: 'INTEGER', options: { primary: true, autoincrement: true}},
+    {name: 'created', type: 'INTEGER', options: { default: '(CURRENT_TIMESTAMP)'}},
 ]);
 </script>
 
@@ -40,24 +34,10 @@ const column = ref<Cols[]>([
         <Input type="text" name="tableName" placeholder="Table Name" v-model="tableName"/>
 
         <div class="flex items-center" v-for="col of column">
-            <Input type="text" name="tableName" placeholder="Table Name"  v-model="col.name"/>
-            <Select v-model="col.type">
-                <SelectTrigger>
-                <SelectValue placeholder="Column type" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="INTEGER">Integer</SelectItem>
-                    <SelectItem value="REAL">Real</SelectItem>
-                    <SelectItem value="TEXT">Text</SelectItem>
-                    <SelectItem value="BLOB">File</SelectItem>
-                </SelectContent>
-            </Select>
-            <Button variant="destructive" @click="column.splice(column.indexOf(col), 1)">
-                <Trash2 />
-            </Button>
+            <ColumnDefinition :col="col" @delete="column.splice(column.indexOf(col), 1)" />
         </div>
 
-        <Button variant="outline" @click="column.push({name:'', type:''})">Add Column</Button>
+        <Button variant="outline" @click="column.push({name:'', type:'', options: {}})">Add Column</Button>
 
         <DialogFooter>
             <DialogClose as-child>
@@ -65,7 +45,7 @@ const column = ref<Cols[]>([
                         Cancel
                     </Button>
                 </DialogClose>
-            <Button @click="">
+            <Button @click="console.log(column)">
                 Create Table
             </Button>
         </DialogFooter>

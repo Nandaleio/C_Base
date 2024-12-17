@@ -62,9 +62,6 @@ import { Input } from '@/components/ui/input';
         <Input type="password" v-model="password" placeholder="Password"/>
         <Input type="password" v-model="confirmPassword" placeholder="Confirm Password"/>
 
-        
-        <pre v-if="error" class="error">{{ error }}</pre>
-
         <DialogFooter>
             <DialogClose as-child>
                 <Button @click="close" type="button" variant="secondary">
@@ -75,9 +72,3 @@ import { Input } from '@/components/ui/input';
         </DialogFooter>
     </DialogContent>
 </template>
-
-<style scoped>
-.error{
-    color: var(--pico-form-element-invalid-active-border-color)
-}
-</style>
