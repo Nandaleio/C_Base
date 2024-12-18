@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "utils.h"
 #include "info.h"
@@ -115,7 +116,7 @@ int check_password(char *hashed_password, char* password, char* salt) {
     mg_sha256_update(&ctx, salt, strlen(salt));
     unsigned char *hash_pass = malloc(32);
     mg_sha256_final(hash_pass, &ctx);
-    int ret = memcmp(hashed_password, hash_pass, 32);
+    int ret = strcmp(hashed_password, hash_pass);
     free(hash_pass);
     return ret;
 }

@@ -76,12 +76,6 @@ char *ctr_delete_table(char* table_name) {
     return json;
 }
 
-char *ctr_get_tables() {
-    char *query = "SELECT name FROM sqlite_master WHERE type='table' and name not like 'sqlite_%' and name not like 'cb_%'";
-    char *json = db_query(query);
-    return json;
-}
-
 // LOGS
 
 char *ctr_get_logs() {

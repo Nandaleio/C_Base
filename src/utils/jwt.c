@@ -68,7 +68,6 @@ int jwt_verify(const char *jwt, int is_admin) {
 
     json_value_free(json_payload);
     free(expected_signature);
-    free(received_signature);
 
     return valid;
 }

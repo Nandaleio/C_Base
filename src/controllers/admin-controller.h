@@ -5,7 +5,6 @@
 // TABLES
 char *ctr_create_table(char* table_name, char* json_columns);
 char *ctr_delete_table(char* table_name);
-char *ctr_get_tables();
 
 // LOGS
 char *ctr_get_logs();

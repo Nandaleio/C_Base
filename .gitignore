@@ -2,4 +2,6 @@
 dist/*
 cb_*
 *.exe
+C_Base
 pack.c
+pack
