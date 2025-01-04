@@ -31,7 +31,7 @@ const emit = defineEmits<{
       <AlertDialogHeader>
         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
         <AlertDialogDescription>
-          This action cannot be undone. {{description}}.
+          {{description}}.
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>

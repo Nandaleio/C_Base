@@ -10,7 +10,6 @@ import Table from '@/components/Table.vue'
     const sqlQuery = ref('');
 
     const loading = ref(false);
-    const error = ref();
     const cols = ref([]);
     const data = ref([]);
 
@@ -19,7 +18,6 @@ import Table from '@/components/Table.vue'
         const res = await cbFetch('/api/admin/query', "POST", {query: sqlQuery.value});
         cols.value = res.columns;
         data.value = res.data;
-        error.value = res.error;
         loading.value = false;
     }
 
@@ -36,7 +34,6 @@ import Table from '@/components/Table.vue'
             <template v-if="cols && cols.length">
                 <Table :cols="cols" :data="data"></Table>
             </template>
-            <pre v-else-if="error" class="error">{{ error }}</pre>
         </div>
     </div>
 </template>
@@ -58,10 +55,6 @@ import Table from '@/components/Table.vue'
         align-items: flex-start;
         justify-content: center;
         height: 100%;
-
-        .error{
-            color: red;
-        }
     }
 
 }

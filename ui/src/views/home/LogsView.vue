@@ -29,8 +29,7 @@ import type { Log } from '@/utils/types';
     function mapDataToDateTotals(): {date:string, info: number, error: number}[] {
         const dateCountMap: {[key:string]: {info: number, error: number}} = {};
 
-        // Iterate over the data array
-        data.value.sort((a,b) => b.created.getTime() - a.created.getTime()).forEach(item => {
+        data.value.sort((a,b) => a.created - b.created).forEach(item => {
             const dateKey = item.created.toString().split(' ')[0];
             if(!dateCountMap[dateKey]) {
                 dateCountMap[dateKey] = {
@@ -40,10 +39,8 @@ import type { Log } from '@/utils/types';
             }
             if(item.level === 'INFO') {
                 dateCountMap[dateKey].info = dateCountMap[dateKey].info + 1;
-                console.log('info', dateCountMap[dateKey].info)
             } else {
                 dateCountMap[dateKey].error = dateCountMap[dateKey].error + 1;
-                console.log('error', dateCountMap[dateKey].info)
             }
         });
 
@@ -53,7 +50,6 @@ import type { Log } from '@/utils/types';
             error: total.error
         }));
 
-        console.log(result);
         return result;
     }
 

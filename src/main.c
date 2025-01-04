@@ -21,8 +21,6 @@ char *s_http_port = "http://0.0.0.0:8080";
 static volatile int running = 1;
 void shut_down(int dummy) { running = 0; }
 
-// TODO void websocket_api();
-
 // HTTP event handler
 static void ev_handler(struct mg_connection *c, int ev, void *ev_data)
 {

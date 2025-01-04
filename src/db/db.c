@@ -27,7 +27,7 @@ int db_init() {
 
     char *sql = "CREATE TABLE IF NOT EXISTS " ADMIN_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created INTEGER DEFAULT (CURRENT_TIMESTAMP),"
+        "created INTEGER DEFAULT (unixepoch('now')),"
         "username TEXT UNIQUE NOT NULL, "
         "email TEXT, "
         "avatar BLOB, "
@@ -80,7 +80,7 @@ int db_init() {
 
     sql = "CREATE TABLE IF NOT EXISTS " USER_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created INTEGER DEFAULT (CURRENT_TIMESTAMP),"
+        "created INTEGER DEFAULT (unixepoch('now')),"
         "username TEXT UNIQUE NOT NULL, "
         "email TEXT, "
         "avatar BLOB, "
@@ -96,7 +96,7 @@ int db_init() {
 
     sql = "CREATE TABLE IF NOT EXISTS " LOG_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created INTEGER DEFAULT (CURRENT_TIMESTAMP),"
+        "created INTEGER DEFAULT (unixepoch('now')),"
         "level TEXT NOT NULL, "
         "description TEXT NOT NULL)";
     retval = sqlite3_exec(db, sql, 0, 0, &errMsg);
@@ -137,7 +137,7 @@ int db_close() {
 }
 
 
-char * db_query_param(const char* query, ...) {
+char * db_query_param(const char* query, unsigned int count, ...) {
     
     log_debug("received query param : %s", query);
 
@@ -149,20 +149,26 @@ char * db_query_param(const char* query, ...) {
         log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
         return "{\"error\": \"Failed to prepare statement\"}";
     }
-    int i = 0;
-
-    char *param = va_arg(args, char*);
-    while(param != NULL){
-
+    for(int i = 1 ; i <= count; i++){
+        char* param = va_arg(args, char*);
         if (sqlite3_bind_text(stmt, i, param, -1, SQLITE_STATIC) != SQLITE_OK) {
             log_error("Failed to bind parameter: %s", sqlite3_errmsg(db));
             return "{\"error\": \"Failed to bind parameter\"}";
         }
-        i++;
-        param = va_arg(args, char*);
+    }
+    va_end(args);
+
+    char *json = db_sqlite_to_json(stmt);
+
+    if (!json) {
+        log_error("Failed to convert result set to JSON");
     }
 
-    va_end(args);
+    if(sqlite3_finalize(stmt) != SQLITE_OK) {
+        log_error("Failed to finalize the statement");
+    }
+
+    return json;
 }
 
 char *db_query(char* query) {
@@ -194,7 +200,7 @@ void db_sqlite_log_callback(log_Event *ev) {
 
     // Prepare the SQL statement
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        log_error(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return;
     }
     int size = vsnprintf(NULL, 0, ev->fmt, ev->ap);
@@ -206,7 +212,7 @@ void db_sqlite_log_callback(log_Event *ev) {
 
     // Execute the SQL statement
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        log_error(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
     }
 
     // Finalize the statement

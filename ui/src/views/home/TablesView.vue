@@ -1,20 +1,11 @@
 <script setup lang="ts">
 
-import {
-    Dialog,
-    DialogTrigger,
-} from '@/components/ui/dialog'
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Table from '@/components/Table.vue'
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip'
 
-import { Plus, Users, Folder, Play } from 'lucide-vue-next'
+import { Users, Folder, Play } from 'lucide-vue-next'
 import InsertRow from "@/components/InsertRow.vue"
 import EditTable from '@/components/EditTable.vue'
 import { onMounted, ref } from 'vue';
@@ -30,7 +21,6 @@ const search = ref<string>("");
 const whereClause = ref<string>();
 const currentTable = ref<string>("user");
 
-const error = ref<any>(undefined);
 const cols = ref<Cols[]>([]);
 const data = ref<{ [key: string]: string }[]>([]);
 
@@ -40,7 +30,6 @@ async function queryTable(table: string, where?: string) {
     const res = await cbFetch(query)
     cols.value = res.columns;
     data.value = res.data;
-    error.value = res.error;
     currentTable.value = table;
     router.push(table);
 }
@@ -66,21 +55,7 @@ onMounted(async () => {
                 {{ table }}
             </span>
             <span class="self-center">
-                <Dialog>
-                    <DialogTrigger>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger as-child>
-                                    <Plus />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Create a new table</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </DialogTrigger>
-                    <CreateTable></CreateTable>
-                </Dialog>
+                    <CreateTable @created="fecthTables"></CreateTable>
             </span>
 
 
@@ -92,7 +67,7 @@ onMounted(async () => {
             <template v-if="cols && cols.length > 0">
                 <div class="flex w-full items-center gap-1.5">
 
-                    <EditTable @deleted="fecthTables" :tableName="currentTable"></EditTable>
+                    <EditTable @deleted="fecthTables" :tableName="currentTable" :cols="cols"></EditTable>
                     <InsertRow :table-name="currentTable" :cols="cols"></InsertRow>
 
                     <Input type="text" v-model="whereClause" placeholder="Where clause" />
@@ -103,7 +78,6 @@ onMounted(async () => {
 
                 <Table :cols="cols" :data="data"></Table>
             </template>
-            <pre v-else-if="error" class="error">{{ error }}</pre>
         </div>
 
     </div>

@@ -36,14 +36,13 @@ import {
   LogOut,
   Settings,
   Pencil,
-  Logs,
+  Logs, SquareFunction,
   Sun, Moon
 } from 'lucide-vue-next'
 import NavBreadCrumb from '@/components/NavBreadCrumb.vue'
 import {userStore} from "@/stores/user-store";
 import {appStore} from "@/stores/app-store";
 import router from '@/router'
-import { env } from '@/utils/env'
 import { onMounted } from 'vue'
 import { cbFetch } from '@/services/api-service'
 import { useColorMode } from '@vueuse/core'
@@ -53,12 +52,13 @@ const mode = useColorMode()
 const list = [
         {icon: Database, path: '/tables', tooltip: "tables", title: "Tables"},
         {icon: Pencil, path: '/editor', tooltip: "editor", title: "Editor"},
-        {icon: Logs, path: '/logs', tooltip: "logs", title: "Logs"}
+        {icon: Logs, path: '/logs', tooltip: "logs", title: "Logs"},
+        {icon: SquareFunction, path:'/functions', tooltip: "functions", title: "Functions"},
     ]
 
 function logout() {
-      localStorage.removeItem(env.localStorageTokenKey);
-      localStorage.removeItem(env.localStorageUserKey);
+      localStorage.removeItem(import.meta.env.VITE_LOCALSTORAGE_TOKEN_KEY);
+      localStorage.removeItem(import.meta.env.VITE_LOCALSTORAGE_USER_KEY);
       router.push("/login");
 }
 
@@ -80,7 +80,7 @@ onMounted(async () => {
 
         <SidebarMenu>
           <SidebarMenuItem>
-                <SidebarMenuButton size="lg" class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+                <SidebarMenuButton size="lg" class="cursor-default data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
                   <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     <img src="/favicon.ico">
                   </div>

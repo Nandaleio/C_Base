@@ -25,7 +25,7 @@ int db_init();
 int db_close();
 
 char *db_query(char *query);
-char *db_query_param(const char* query, ...);
+char *db_query_param(const char* query, unsigned int count, ...);
 void db_sqlite_log_callback(log_Event *ev);
 
 
