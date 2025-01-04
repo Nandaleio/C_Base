@@ -49,7 +49,8 @@ char *db_sqlite_to_json(sqlite3_stmt *stmt) {
     json_object_set_value(root_object, "data", data_value);
 
     int row_count = 0;
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
+    int final_step = sqlite3_step(stmt);
+    while (final_step == SQLITE_ROW) {
         JSON_Value *row_value = json_value_init_object();
         JSON_Object *row_object = json_value_get_object(row_value);
 
@@ -76,16 +77,12 @@ char *db_sqlite_to_json(sqlite3_stmt *stmt) {
         json_array_append_value(data_array, row_value);
         row_count++;
 
-        // if (sqlite3_step(stmt) == SQLITE_ROW) {
-        //     sqlite3_reset(stmt); // Reset to re-fetch this row
-        // } else {
-        //     break;
-        // }
+        final_step = sqlite3_step(stmt);
     }
 
     // Add error field
     const char *error_msg = sqlite3_errmsg(db);
-    if (row_count == 0 && strlen(error_msg) > 0 && sqlite3_step(stmt) != SQLITE_DONE) {
+    if (row_count == 0 && strlen(error_msg) > 0 && final_step != SQLITE_DONE) {
         json_object_set_string(root_object, "error", error_msg);
     } else {
         json_object_set_null(root_object, "error");

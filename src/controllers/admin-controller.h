@@ -3,7 +3,7 @@
 
 
 // TABLES
-char *ctr_create_table(char* table_name, char* json_columns);
+char *ctr_create_table(const char* table_name, const char* json_columns);
 char *ctr_delete_table(char* table_name);
 
 char *ctr_get_admins();

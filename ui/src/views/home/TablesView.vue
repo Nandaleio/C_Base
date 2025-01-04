@@ -1,20 +1,11 @@
 <script setup lang="ts">
 
-import {
-    Dialog,
-    DialogTrigger,
-} from '@/components/ui/dialog'
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Table from '@/components/Table.vue'
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip'
 
-import { Plus, Users, Folder, Play } from 'lucide-vue-next'
+import { Users, Folder, Play } from 'lucide-vue-next'
 import InsertRow from "@/components/InsertRow.vue"
 import EditTable from '@/components/EditTable.vue'
 import { onMounted, ref } from 'vue';
@@ -64,21 +55,7 @@ onMounted(async () => {
                 {{ table }}
             </span>
             <span class="self-center">
-                <Dialog>
-                    <DialogTrigger>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger as-child>
-                                    <Plus />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Create a new table</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </DialogTrigger>
-                    <CreateTable></CreateTable>
-                </Dialog>
+                    <CreateTable @created="fecthTables"></CreateTable>
             </span>
 
 

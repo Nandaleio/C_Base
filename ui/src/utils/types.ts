@@ -7,7 +7,9 @@ export type Cols = {
         primary?: boolean,
         autoincrement?: boolean,
         notnull?: boolean
+        unique?: boolean
         default?: string
+        check?: string
     }
 }
 

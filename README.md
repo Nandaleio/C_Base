@@ -2,7 +2,8 @@
 
 A [Pocketbase](https://pocketbase.io/) alternative _(or copy)_ written in C and using [Mongoose web server](https://mongoose.ws/) and [SQLite](https://www.sqlite.org/)
 
-**_!!! This is probably never going to be a production grade application !!!_**
+**_!!! This is probably never going to be a production grade application !!!_**\
+**_!!! Expect crash, segfault and many other problems while using the app  !!!_**
 
 ## Main Features :
 
@@ -10,6 +11,11 @@ A [Pocketbase](https://pocketbase.io/) alternative _(or copy)_ written in C and 
 - Authentication
 - Embedded admin UI
 - Less than 5MB single executable _(might exceed a bit in the future)_
+
+**Windows and Linux are currently the only supported platforms !** 
+
+C_Base **does not** and **will not** provide any SDK.\
+But you can query the API through any HTTP client.
 
 ## How to use:
 
@@ -24,13 +30,38 @@ You can then access :
 - `localhost:8080/`: `cb_public` content
 - `localhost:8080/_/`: admin UI
 - `localhost:8080/api`: API
-- `localhost:8080/api/amdin`: admin API
+
+The default admins credentials are _username: **admin** password: **admin**_\
+Change it as soon as you log into the app for the first time.
 
 
-**Windows and Linux are currently the only supported platforms !** 
+## API Description 
 
-C_Base **does not** and **will not** provide any SDK.\
-But you can query the API through any HTTP client.
+### Standard API
+
+| URL |HTTP Verb| Description | Expected Body
+|-|:-:|-|:-:|
+|`/api/auth/login"`| POST | User login | {username:string, password:string} |
+|`/api/auth/register`| POST | User registration | {username:string, password:string} |
+|`/api/tables`| GET | List available tables except the C_Base ones ||
+|`/api/table/:table?where=...`| GET | Get the table rows according to the optional where clause ||
+|`/api/version`|  GET |Return the current version of the C_Base instance ||
+
+
+### Admin API
+| URL |HTTP Verb| Description | Expected Body
+|-|:-:|-|:-:|
+|`/api/admin/login`| POST |Admin login | {username:string, password:string}|
+|`/api/admin/logs`| GET |Get the C_Base instace logs||
+|`/api/admin/query`| POST | Query the database| {query: string}|
+|`/api/admin/admins`| GET | List all the existing admins ||
+|`/api/admin/admin`| POST | Create a new admin| {username:string, password:string}|
+|`/api/admin/admin/:adminId`| DELETE | Delete the admin by id ||
+|`/api/admin/table/:tableName`| POST | Create a new table ||
+|`/api/admin/table/:tableName`| DELETE | Delete the table by _tableName_ ||
+|`/api/admin/configs`| GET | Get all the C_Base configuration ||
+|`/api/admin/configs`| PUT | Set the C_Base configuration | {name:string, value:string} |
+
 
 ## Roadmap :
 

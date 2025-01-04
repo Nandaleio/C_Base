@@ -27,7 +27,7 @@ int db_init() {
 
     char *sql = "CREATE TABLE IF NOT EXISTS " ADMIN_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created INTEGER DEFAULT (CURRENT_TIMESTAMP),"
+        "created INTEGER DEFAULT (unixepoch('now')),"
         "username TEXT UNIQUE NOT NULL, "
         "email TEXT, "
         "avatar BLOB, "
@@ -80,7 +80,7 @@ int db_init() {
 
     sql = "CREATE TABLE IF NOT EXISTS " USER_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created INTEGER DEFAULT (CURRENT_TIMESTAMP),"
+        "created INTEGER DEFAULT (unixepoch('now')),"
         "username TEXT UNIQUE NOT NULL, "
         "email TEXT, "
         "avatar BLOB, "
@@ -96,7 +96,7 @@ int db_init() {
 
     sql = "CREATE TABLE IF NOT EXISTS " LOG_TABLE " ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "created INTEGER DEFAULT (CURRENT_TIMESTAMP),"
+        "created INTEGER DEFAULT (unixepoch('now')),"
         "level TEXT NOT NULL, "
         "description TEXT NOT NULL)";
     retval = sqlite3_exec(db, sql, 0, 0, &errMsg);
@@ -200,7 +200,7 @@ void db_sqlite_log_callback(log_Event *ev) {
 
     // Prepare the SQL statement
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        log_error(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return;
     }
     int size = vsnprintf(NULL, 0, ev->fmt, ev->ap);
@@ -212,7 +212,7 @@ void db_sqlite_log_callback(log_Event *ev) {
 
     // Execute the SQL statement
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        log_error(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
     }
 
     // Finalize the statement

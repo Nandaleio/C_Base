@@ -5,7 +5,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
@@ -16,6 +15,7 @@ import { ref } from 'vue';
 
 const crumbs = ref<string[]>([])
 router.afterEach((to, from, failure) => {
+  console.log(router.currentRoute.value);
   crumbs.value = router.currentRoute.value.fullPath.split('/').filter(v => !!v);
 })
 

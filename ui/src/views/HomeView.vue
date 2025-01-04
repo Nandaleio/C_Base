@@ -36,7 +36,7 @@ import {
   LogOut,
   Settings,
   Pencil,
-  Logs,
+  Logs, SquareFunction,
   Sun, Moon
 } from 'lucide-vue-next'
 import NavBreadCrumb from '@/components/NavBreadCrumb.vue'
@@ -52,7 +52,8 @@ const mode = useColorMode()
 const list = [
         {icon: Database, path: '/tables', tooltip: "tables", title: "Tables"},
         {icon: Pencil, path: '/editor', tooltip: "editor", title: "Editor"},
-        {icon: Logs, path: '/logs', tooltip: "logs", title: "Logs"}
+        {icon: Logs, path: '/logs', tooltip: "logs", title: "Logs"},
+        {icon: SquareFunction, path:'/functions', tooltip: "functions", title: "Functions"},
     ]
 
 function logout() {

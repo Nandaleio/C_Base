@@ -58,7 +58,7 @@ char *auth_add_user(char *username, char *password) {
 char *auth_login(char *username, char *password) {
     
     log_trace("User %s logging in", username);
-    char *query = "select password, salt from " USER_TABLE " where username = ?";
+    char *query = "select password, salt, email from " USER_TABLE " where username = ?";
     
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
@@ -78,6 +78,7 @@ char *auth_login(char *username, char *password) {
 
     char* hashed_password = sqlite3_column_text(stmt, 0);
     char* salt = sqlite3_column_text(stmt, 1);
+    char* email = sqlite3_column_text(stmt, 2);
 
     if(check_password(hashed_password, password, salt) != 0) {
         log_error("The passwords doesn't match");
@@ -99,9 +100,14 @@ char *auth_login(char *username, char *password) {
     
     json_free_serialized_string(serialized_string);
     json_value_free(payload_value);
-    
-    char *json = malloc(strlen(jwt) + 20);
-    sprintf(json, "{\"token\": \"%s\"}", jwt);
+
+    JSON_Value *json_value = json_value_init_object();
+    JSON_Object *json_object = json_value_get_object(json_value);
+    json_object_set_string(json_object, "token", jwt);
+    json_object_set_string(json_object, "username", username);
+    json_object_set_string(json_object, "email", email);
+    const char *json = json_serialize_to_string_pretty(json_value);
+    json_value_free(json_value);
     return json;
 }
 
