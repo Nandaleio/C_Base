@@ -2,9 +2,14 @@
 
 #include "../libs/parson.h"
 #include "../libs/sqlite3.h"
+#include "../libs/log.h"
 #include "../db/db.h"
 #include "../utils/jwt.h"
 #include "../utils/info.h"
+#include "../utils/utils.h"
+
+#include <stdlib.h>
+#include <string.h>
 
 
 char *auth_add_user(char *username, char *password) {
@@ -15,12 +20,12 @@ char *auth_add_user(char *username, char *password) {
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to prepare statement\"}";
+        return error_json_char("Failed to prepare statement");
     }
 
     if (sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to bind username parameter\"}";
+        return error_json_char("Failed to bind username parameter");
     }
 
     char salt[SALT_LENGTH+1];
@@ -29,30 +34,30 @@ char *auth_add_user(char *username, char *password) {
     if (sqlite3_bind_text(stmt, 2, salt, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
         free(hash_pass); 
-        return "{\"error\": \"Failed to bind username parameter\"}";
+        return error_json_char("Failed to bind username parameter");
     }
 
     if (sqlite3_bind_text(stmt, 3, hash_pass, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind password parameter: %s", sqlite3_errmsg(db));
         free(hash_pass); 
-        return "{\"error\": \"Failed to bind password parameter\"}";
+        return error_json_char("Failed to bind password parameter");
     }
 
     if(sqlite3_step(stmt) != SQLITE_DONE) {
         log_error("Failed to insert user: %s", sqlite3_errmsg(db));
         free(hash_pass); 
-        return "{\"error\": \"Failed to insert user\"}";
+        return error_json_char("Failed to insert user");
 	}
     
 	if(sqlite3_finalize(stmt) != SQLITE_OK){
         log_error("Failed finalize statement: %s", sqlite3_errmsg(db));
         free(hash_pass); 
-        return "{\"error\": \"Failed finalize statement:\"}";
+        return error_json_char("Failed finalize statement:");
     }
     
     free(hash_pass); 
 
-    return "{\"error\": \"\"}";
+    return error_json_char("");
 }
 
 char *auth_login(char *username, char *password) {
@@ -63,17 +68,17 @@ char *auth_login(char *username, char *password) {
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to prepare statement\"}";
+        return error_json_char("Failed to prepare statement");
     }
     
     if (sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to bind username parameter\"}";
+        return error_json_char("Failed to bind username parameter");
     }
 
     if(sqlite3_step(stmt) != SQLITE_ROW) {
         log_error("Failed to get user row: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to get user row\"}";
+        return error_json_char("Failed to get user row");
 	}
 
     char* hashed_password = sqlite3_column_text(stmt, 0);
@@ -82,7 +87,7 @@ char *auth_login(char *username, char *password) {
 
     if(check_password(hashed_password, password, salt) != 0) {
         log_error("The passwords doesn't match");
-        return "{\"error\": \"wrong password\"}";
+        return error_json_char("wrong password");
     }
 
     unsigned long current_time = (unsigned long)time(NULL);
@@ -119,17 +124,17 @@ char *auth_admin_login(char *username, char *password) {
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to prepare statement\"}";
+        return error_json_char("Failed to prepare statement");
     }
     
     if (sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to bind username parameter\"}";
+        return error_json_char("Failed to bind username parameter");
     }
 
     if(sqlite3_step(stmt) != SQLITE_ROW) {
         log_error("Failed to get user row: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Unknown admin\"}";
+        return error_json_char("Unknown admin");
 	}
 
     char* hashed_password = sqlite3_column_text(stmt, 0);
@@ -139,7 +144,7 @@ char *auth_admin_login(char *username, char *password) {
 
     if(check_password(hashed_password, password, salt) != 0) {
         log_error("The passwords doesn't match");
-        return "{\"error\": \"wrong password for this admin\"}";
+        return error_json_char("wrong password for this admin");
     }
 
     unsigned long current_time = (unsigned long)time(NULL);
@@ -176,12 +181,12 @@ char *auth_add_admin(char *username, char *password) {
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to prepare statement\"}";
+        return error_json_char("Failed to prepare statement");
     }
 
     if (sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to bind username parameter\"}";
+        return error_json_char("Failed to bind username parameter");
     }
 
     char salt[SALT_LENGTH+1];
@@ -190,30 +195,30 @@ char *auth_add_admin(char *username, char *password) {
     if (sqlite3_bind_text(stmt, 2, salt, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
         free(hash_pass); 
-        return "{\"error\": \"Failed to bind username parameter\"}";
+        return error_json_char("Failed to bind username parameter");
     }
 
     if (sqlite3_bind_text(stmt, 3, hash_pass, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind password parameter: %s", sqlite3_errmsg(db));
         free(hash_pass); 
-        return "{\"error\": \"Failed to bind password parameter\"}";
+        return error_json_char("Failed to bind password parameter");
     }
 
     if(sqlite3_step(stmt) != SQLITE_DONE) {
         log_error("Failed to insert user: %s", sqlite3_errmsg(db));
         free(hash_pass); 
-        return "{\"error\": \"Failed to insert user\"}";
+        return error_json_char("Failed to insert user");
 	}
     
 	if(sqlite3_finalize(stmt) != SQLITE_OK){
         log_error("Failed finalize statement: %s", sqlite3_errmsg(db));
         free(hash_pass); 
-        return "{\"error\": \"Failed finalize statement:\"}";
+        return error_json_char("Failed finalize statement:");
     }
     
     free(hash_pass); 
 
-    return "{\"error\": \"\"}";
+    return error_json_char("");
 }
 
 char *auth_delete_admin(char *username) {
@@ -222,19 +227,19 @@ char *auth_delete_admin(char *username) {
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to prepare statement\"}";
+        return error_json_char("Failed to prepare statement");
     }
     if (sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC) != SQLITE_OK) {
         log_error("Failed to bind username parameter: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to bind username parameter\"}";
+        return error_json_char("Failed to bind username parameter");
     }
     if(sqlite3_step(stmt) != SQLITE_DONE) {
         log_error("Failed to insert user: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to insert user\"}";
+        return error_json_char("Failed to insert user");
 	}
 	if(sqlite3_finalize(stmt) != SQLITE_OK){
         log_error("Failed finalize statement: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed finalize statement:\"}";
+        return error_json_char("Failed finalize statement:");
     }
-    return "{\"error\": \"\"}";
+    return error_json_char("");
 }

@@ -1,6 +1,7 @@
 
 #include "admin-controller.h"
 #include <stddef.h>
+#include <string.h>
 #include "../db/db.h"
 
 

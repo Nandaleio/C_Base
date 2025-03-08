@@ -41,6 +41,7 @@ async function fecthTables() {
 
 onMounted(async () => {
     await fecthTables();
+    //await queryTable(router.currentRoute.value.fullPath.split('/').pop() || 'users');
 })
 
 </script>
@@ -50,16 +51,13 @@ onMounted(async () => {
         <div class="flex flex-col rounded-tr-2xl p-4 gap-4 items-start bg-secondary text-secondary-foreground">
             <span class="flex flex-row gap-4 items-center cursor-pointer"
                 v-for="table of list.filter((t: string) => t.includes(search))" @click="queryTable(table)">
-                <Users v-if="table == 'user'" />
+                <Users v-if="table == 'users'" />
                 <Folder v-else />
                 {{ table }}
             </span>
             <span class="self-center">
                     <CreateTable @created="fecthTables"></CreateTable>
             </span>
-
-
-
         </div>
 
         <div class="flex gap-4 flex-col pt-0 p-4 w-full">

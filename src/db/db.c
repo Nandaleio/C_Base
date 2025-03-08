@@ -1,6 +1,7 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "../libs/parson.h"
 
@@ -147,13 +148,13 @@ char * db_query_param(const char* query, unsigned int count, ...) {
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to prepare statement\"}";
+        return error_json_char("Failed to prepare statement");
     }
     for(int i = 1 ; i <= count; i++){
         char* param = va_arg(args, char*);
         if (sqlite3_bind_text(stmt, i, param, -1, SQLITE_STATIC) != SQLITE_OK) {
             log_error("Failed to bind parameter: %s", sqlite3_errmsg(db));
-            return "{\"error\": \"Failed to bind parameter\"}";
+            return error_json_char("Failed to bind parameter");
         }
     }
     va_end(args);
@@ -178,7 +179,7 @@ char *db_query(char* query) {
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
-        return "{\"error\": \"Failed to prepare statement\"}";
+        return error_json_char("Failed to prepare statement");
     }
 
     char *json = db_sqlite_to_json(stmt);
@@ -200,7 +201,7 @@ void db_sqlite_log_callback(log_Event *ev) {
 
     // Prepare the SQL statement
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        log_error(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
         return;
     }
     int size = vsnprintf(NULL, 0, ev->fmt, ev->ap);
@@ -212,7 +213,7 @@ void db_sqlite_log_callback(log_Event *ev) {
 
     // Execute the SQL statement
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        log_error(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        log_error("Failed to execute statement: %s", sqlite3_errmsg(db));
     }
 
     // Finalize the statement

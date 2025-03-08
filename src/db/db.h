@@ -11,7 +11,7 @@
 #define ADMIN_TABLE "cb_admin"
 #define LOG_TABLE "cb_log"
 #define CONFIG_TABLE "cb_config"
-#define USER_TABLE "user"
+#define USER_TABLE "users"
 
 typedef struct user {
   const char *name;
