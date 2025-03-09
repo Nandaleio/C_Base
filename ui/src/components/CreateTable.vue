@@ -21,16 +21,19 @@ import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-vue-next'
 
 import ColumnDefinition from '@/components/ColumnDefinition.vue';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import type { Cols } from '@/utils/types';
 import { cbFetch } from '@/services/api-service';
 import { useToast } from './ui/toast';
 
-const tableName = ref<string>('');
-const column = ref<Cols[]>([
+const columnDefaultValue = [
     { name: 'id', type: 'INTEGER', options: { primary: true, autoincrement: true } },
-    { name: 'created', type: 'INTEGER', options: { default: "(unixepoch('now'))" } },
-]);
+    { name: 'created', type: 'INTEGER', options: { default: "unixepoch('now')" } },
+]
+
+const tableName = ref<string>('');
+const column = ref<Cols[]>(columnDefaultValue);
+
 
 const open = ref(false)
 
@@ -49,7 +52,23 @@ async function createTable() {
     if (!res.error) {
         emits('created');
         open.value = false;
+        column.value = columnDefaultValue;
     };
+}
+
+const existingtables = ref<string[]>([]);
+onMounted(async () => {
+    fecthExistingTables()
+})
+
+const fecthExistingTables = async () => {
+    const res = await cbFetch('/api/tables');
+    existingtables.value = res.data.map((v: any) => { return v.name });
+}
+
+const openModal = async () => {
+    await fecthExistingTables();
+    open.value = true;
 }
 
 const emits = defineEmits<{
@@ -60,7 +79,7 @@ const emits = defineEmits<{
 
 <template>
 
-    <Dialog :open="open" @update:open="(o) => open = o">
+    <Dialog :open="open" @update:open="(o) => openModal()">
         <DialogTrigger>
             <TooltipProvider>
                 <Tooltip>
@@ -84,7 +103,7 @@ const emits = defineEmits<{
             <Input type="text" name="tableName" placeholder="Table Name" v-model="tableName" />
 
             <div class="flex items-center" v-for="col of column">
-                <ColumnDefinition :col="col" @delete="column.splice(column.indexOf(col), 1)" />
+                <ColumnDefinition :col="col" :existingTables="existingtables" @delete="column.splice(column.indexOf(col), 1)" />
             </div>
 
             <Button variant="outline" @click="column.push({ name: '', type: '', options: {} })">Add Column</Button>

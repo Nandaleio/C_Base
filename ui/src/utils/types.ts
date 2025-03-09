@@ -6,10 +6,12 @@ export type Cols = {
     options: {
         primary?: boolean,
         autoincrement?: boolean,
-        notnull?: boolean
-        unique?: boolean
-        default?: string
-        check?: string
+        notnull?: boolean,
+        unique?: boolean,
+        default?: string,
+        check?: string,
+        foreign?: string,
+        foreignOnDeleteNull?: boolean,
     }
 }
 

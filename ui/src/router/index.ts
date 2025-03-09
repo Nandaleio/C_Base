@@ -17,7 +17,7 @@ const router = createRouter({
       { path: '/functions', component: FunctionsView },
       { path: '/logs', component: LogsView },
       { path: '/settings', component: SettingsView },
-      { path: '/:pathMatch(.*)*', redirect: '/tables' }
+      { path: '/:pathMatch(.*)*', redirect: '/tables/users', beforeEnter: (to, from, next) => { alert('page not found') } }
     ]},
   ],
 })

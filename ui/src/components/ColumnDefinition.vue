@@ -15,7 +15,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover'
 
-import { Trash2, Settings, Ban, Key, ArrowUp10, Sparkle, Info } from 'lucide-vue-next'
+import { Trash2, Settings, Ban, Key, ArrowUp10, Sparkle, Info, RouteOff, Route } from 'lucide-vue-next'
 import type { Cols } from '@/utils/types';
 import {
   Tooltip,
@@ -23,10 +23,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-
+import { ref } from 'vue';
 
 defineProps<{
-    col: Cols
+    col: Cols,
+    existingTables?: string[]
 }>();
 
 const emit = defineEmits<{
@@ -46,8 +47,19 @@ const emit = defineEmits<{
             <SelectItem value="INTEGER">Integer</SelectItem>
             <SelectItem value="REAL">Number</SelectItem>
             <SelectItem value="DATE">Date</SelectItem>
+            <SelectItem value="ANY">Relation</SelectItem>
             <SelectItem value="BLOB">File</SelectItem>
-            <!-- <SelectItem disabled value="---">Relation</SelectItem> -->
+        </SelectContent>
+    </Select>
+
+    <Select v-if="col.type === 'ANY'" v-model="col.options.foreign">
+        <SelectTrigger class="rounded-none">
+            <SelectValue placeholder="Foreign table" />
+        </SelectTrigger>
+        <SelectContent>
+            <SelectItem :value="t" v-for="t of existingTables">
+                {{ t }}
+            </SelectItem>
         </SelectContent>
     </Select>
     <Popover>
@@ -82,6 +94,8 @@ const emit = defineEmits<{
                     </Tooltip>
                 </Toggle>
 
+
+
                 <Toggle variant="outline" v-bind:pressed="!!col.options.notnull" @update:pressed="(v) => col.options.notnull = v">
                     <Tooltip>
                         <TooltipTrigger as-child>
@@ -92,6 +106,23 @@ const emit = defineEmits<{
                         </TooltipContent>
                     </Tooltip>
                 </Toggle>
+
+                <template v-if="col.type === 'ANY'">
+                    <Toggle variant="outline" v-bind:pressed="col.options.foreignOnDeleteNull" @update:pressed="(v) => col.options.foreignOnDeleteNull = v">
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <RouteOff v-if="col.options.foreignOnDeleteNull"/>
+                                <Route v-else/>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>
+                                    <span v-if="col.options.foreignOnDeleteNull">On delete SET NULL</span>
+                                    <span v-else>On delete CASCADE</span>
+                                </p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </Toggle>
+                </template>
 
                 <Toggle variant="outline" v-bind:pressed="!!col.options.unique" @update:pressed="(v) => col.options.unique = v">
                     <Tooltip>
@@ -106,7 +137,7 @@ const emit = defineEmits<{
 
                 <Input type="text" placeholder="Default value" v-model="col.options.default"/>
 
-                <Tooltip>
+                <Tooltip v-if="col.type !== 'ANY'">
                         <TooltipTrigger as-child>
                             <Input type="text" placeholder="Check expression" v-model="col.options.check"/>
                         </TooltipTrigger>

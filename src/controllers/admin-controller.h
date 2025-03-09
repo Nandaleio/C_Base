@@ -15,8 +15,4 @@ char *ctr_get_logs();
 char *ctr_get_configs();
 char *ctr_set_config_value(char *config_name, char* config_value);
 
-char *ctr_get_config_value_str(char *config_name);
-int ctr_get_config_value_int(char *config_name);
-double ctr_get_config_value_double(char *config_name);
-
 #endif

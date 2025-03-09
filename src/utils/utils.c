@@ -20,7 +20,7 @@
 char *db_sqlite_to_json(sqlite3_stmt *stmt) {
     if (!stmt) {
         log_error( "Invalid SQLite statement or database");
-        return "{\"columns\":[],\"data\":[],\"error\":\"Invalid input\"}";
+        return error_json_char("Invalid input");
     }
 
     // Start building the JSON
@@ -118,6 +118,15 @@ int check_password(char *hashed_password, char* password, char* salt) {
     return ret;
 }
 
+char *error_json_char(const char *error) {
+    JSON_Value *root_value = json_value_init_object();
+    JSON_Object *root_object = json_value_get_object(root_value);
+    json_object_set_string(root_object, "error", error);
+    char *json = json_serialize_to_string(root_value);
+    json_value_free(root_value);
+    return json;
+}
+
 static const char base64url_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 char *base64url_encode(const unsigned char *input, size_t length) {
     size_t output_length = 4 * ((length + 2) / 3); // Calculate output length
@@ -189,3 +198,71 @@ char *base64url_decode(const char *input) {
 
     return output;
 }
+
+
+char *get_config_str(const char *key) {
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, "SELECT value FROM "CONFIG_TABLE" WHERE name = ?", -1, &stmt, NULL) != SQLITE_OK) {
+        log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
+        return error_json_char("Failed to prepare statement");
+    }
+
+    if (sqlite3_bind_text(stmt, 1, key, -1, SQLITE_STATIC) != SQLITE_OK) {
+        log_error("Failed to bind key parameter: %s", sqlite3_errmsg(db));
+        return error_json_char("Failed to bind key parameter");
+    }
+
+    int col_count = sqlite3_column_count(stmt);
+    if (col_count = 0 ||sqlite3_step(stmt) != SQLITE_ROW) {
+        log_error("Failed to step statement: %s", sqlite3_errmsg(db));
+        return error_json_char("Failed to step statement");
+    }
+
+    char *value = sqlite3_column_text(stmt, 0);
+    sqlite3_finalize(stmt);
+    return value;
+
+}
+
+int get_config_int(const char *key) {
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, "SELECT value FROM "CONFIG_TABLE" WHERE name = ?", -1, &stmt, NULL) != SQLITE_OK) {
+        log_error("Failed to prepare statement: %s", sqlite3_errmsg(db));
+        return -1;
+    }
+
+    if (sqlite3_bind_text(stmt, 1, key, -1, SQLITE_STATIC) != SQLITE_OK) {
+        log_error("Failed to bind key parameter: %s", sqlite3_errmsg(db));
+        return -1;
+    }
+
+    int col_count = sqlite3_column_count(stmt);
+    if (col_count = 0 ||sqlite3_step(stmt) != SQLITE_ROW) {
+        log_error("Failed to step statement: %s", sqlite3_errmsg(db));
+        return -1;
+    }
+
+    int value = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    return value;
+
+}
+
+char* add_config(const char *key, const char *value, char *type) {
+    char *query = "INSERT INTO "CONFIG_TABLE" (name, value, type) VALUES (?, ?, ?)";
+    char *json = db_query_param(query, 3, key, value, type);
+    return json;
+}
+
+char* update_config(const char *key, const char *value) {
+    char *query = "UPDATE " CONFIG_TABLE " SET value = ?  WHERE name = ?";
+    char *json = db_query_param(query, 2, value, key);
+    return json;
+}
+
+char* delete_config(const char *key) {
+    char *query = "DELETE FROM "CONFIG_TABLE" WHERE name = ?";
+    char *json = db_query_param(query, 1, key);
+    return json;
+}
+

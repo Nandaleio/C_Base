@@ -17,7 +17,7 @@ void standard_routes(struct mg_connection *c, int ev, void *ev_data, struct mg_h
         char *password = mg_json_get_str(hm->body, "$.password");
         char *json = auth_add_user(username, password);
         mg_http_reply(c, 200, MG_API_HEADERS, "%s\n", json);
-        free(json);
+        json_free_serialized_string(json);
         return;
     }
 

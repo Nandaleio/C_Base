@@ -15,7 +15,6 @@ import { ref } from 'vue';
 
 const crumbs = ref<string[]>([])
 router.afterEach((to, from, failure) => {
-  console.log(router.currentRoute.value);
   crumbs.value = router.currentRoute.value.fullPath.split('/').filter(v => !!v);
 })
 
@@ -30,7 +29,7 @@ router.afterEach((to, from, failure) => {
             <BreadcrumbList>
                 <template v-for="(item, index) of crumbs">
                     <BreadcrumbItem class="hidden md:block">
-                        <BreadcrumbLink href="#" class="capitalize">
+                        <BreadcrumbLink :href="`#`" class="capitalize">
                             {{ item }}
                         </BreadcrumbLink>
                     </BreadcrumbItem>

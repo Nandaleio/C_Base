@@ -40,7 +40,7 @@ Change it as soon as you log into the app for the first time.
 ### Standard API
 
 | URL |HTTP Verb| Description | Expected Body
-|-|:-:|-|:-:|
+|:-|:-:|-|:-:|
 |`/api/auth/login"`| POST | User login | {username:string, password:string} |
 |`/api/auth/register`| POST | User registration | {username:string, password:string} |
 |`/api/tables`| GET | List available tables except the C_Base ones ||
@@ -50,13 +50,13 @@ Change it as soon as you log into the app for the first time.
 
 ### Admin API
 | URL |HTTP Verb| Description | Expected Body
-|-|:-:|-|:-:|
+|:-|:-:|-|:-:|
 |`/api/admin/login`| POST |Admin login | {username:string, password:string}|
 |`/api/admin/logs`| GET |Get the C_Base instace logs||
 |`/api/admin/query`| POST | Query the database| {query: string}|
 |`/api/admin/admins`| GET | List all the existing admins ||
 |`/api/admin/admin`| POST | Create a new admin| {username:string, password:string}|
-|`/api/admin/admin/:adminId`| DELETE | Delete the admin by id ||
+|`/api/admin/admin/:adminId`| DELETE | Delete the admin by _id_ ||
 |`/api/admin/table/:tableName`| POST | Create a new table ||
 |`/api/admin/table/:tableName`| DELETE | Delete the table by _tableName_ ||
 |`/api/admin/configs`| GET | Get all the C_Base configuration ||
@@ -81,6 +81,14 @@ The final goal is to implements as many features Pocketbase offers.
 C_Base is just a little personal challenge so I can learn a bit of C _(that's why it's probably full of memory leaks)_.
 
 Feel free to open an issue or start a discussion if you have any questions or improvement suggestions
+
+## Tech stack :
+
+C_Base uses :
+ - [SQLite](https://www.sqlite.org/) for the database
+ - [Mongoose web server](https://mongoose.ws/) for the http server
+ - [Vue.js](https://vuejs.org/) and [Shadcn vue ](https://www.shadcn-vue.com/) for the admin UI
+ - [Duktape](https://duktape.org/) for the JS engine
 
 ## TODO : 
 

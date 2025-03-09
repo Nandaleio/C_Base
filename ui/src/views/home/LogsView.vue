@@ -45,7 +45,7 @@ import type { Log } from '@/utils/types';
         });
 
         const result = Object.entries(dateCountMap).map(([date, total]) => ({
-            date,
+            date: new Date(date).toLocaleString('en-GB', { timeZone: 'UTC' }),
             info: total.info,
             error: total.error
         }));
@@ -84,7 +84,7 @@ import type { Log } from '@/utils/types';
                 </TableHeader>
                 <TableBody>
                     <TableRow v-for="d of data">
-                        <TableCell>{{d.created}}</TableCell>
+                        <TableCell>{{ new Date(d.created).toLocaleString('en-GB', { timeZone: 'UTC' }) }}</TableCell>
                         <TableCell>{{d.level}}</TableCell>
                         <TableCell>{{d.description}}</TableCell>
                     </TableRow>
