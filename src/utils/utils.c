@@ -99,22 +99,24 @@ char *hash_password(char* password, char* salt) {
     mg_random_str(salt, SALT_LENGTH+1);
     mg_sha256_ctx ctx;
     mg_sha256_init(&ctx);
-    mg_sha256_update(&ctx, password, strlen(password));
-    mg_sha256_update(&ctx, salt, strlen(salt));
-    unsigned char *hash_pass = malloc(32);
-    mg_sha256_final(hash_pass, &ctx);
-    return hash_pass;
+    mg_sha256_update(&ctx, (unsigned char*)password, strlen(password));
+    mg_sha256_update(&ctx, (unsigned char*)salt, strlen(salt));
+    unsigned char hash[32];
+    mg_sha256_final(hash, &ctx);
+    return base64url_encode(hash, 32);
 }
 
 int check_password(char *hashed_password, char* password, char* salt) {
     mg_sha256_ctx ctx;
     mg_sha256_init(&ctx);
-    mg_sha256_update(&ctx, password, strlen(password));
-    mg_sha256_update(&ctx, salt, strlen(salt));
-    unsigned char *hash_pass = malloc(32);
-    mg_sha256_final(hash_pass, &ctx);
-    int ret = strcmp(hashed_password, hash_pass);
-    free(hash_pass);
+    mg_sha256_update(&ctx, (unsigned char*)password, strlen(password));
+    mg_sha256_update(&ctx, (unsigned char*)salt, strlen(salt));
+    unsigned char hash[32];
+    mg_sha256_final(hash, &ctx);
+    char *encoded = base64url_encode(hash, 32);
+    if (!encoded) return -1;
+    int ret = strcmp(hashed_password, encoded);
+    free(encoded);
     return ret;
 }
 
